@@ -1,5 +1,6 @@
 from flask import Flask, render_template, session, redirect, url_for, request
 from pymongo import MongoClient
+from flask import flash
 import os
 import requests
 
@@ -81,6 +82,33 @@ def callback():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/create_template/<guild_id>', methods=['POST'])
+def create_template(guild_id):
+    if 'token' not in session: return redirect(url_for('index'))
+    
+    # Obtenemos los datos del formulario
+    nombre = request.form.get('nombre')
+    roles_input = request.form.get('roles') # Formato: Tanque:1, Healer:2
+    
+    try:
+        # Convertimos el texto "Rol:Cantidad" en un diccionario de Python
+        roles_dict = {}
+        for item in roles_input.split(','):
+            partes = item.split(':')
+            if len(partes) == 2:
+                roles_dict[partes[0].strip()] = int(partes[1].strip())
+        
+        # Guardamos en la base de datos
+        db = get_db() # Usando la función que ya teníamos
+        db["custom_templates"].update_one(
+            {"guild_id": int(guild_id), "nombre": nombre},
+            {"$set": {"roles": roles_dict, "guild_id": int(guild_id)}},
+            upsert=True
+        )
+        return redirect(url_for('dashboard', guild_id=guild_id))
+    except Exception as e:
+        return f"Error al crear la plantilla: {e}", 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

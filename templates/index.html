@@ -16,7 +16,56 @@
     </style>
 </head>
 <body>
+<div class="row mt-5">
+    <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+        <h3 style="color: #ffaa00;">📋 Plantillas del Gremio</h3>
+        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#templateModal">
+            + Nueva Plantilla
+        </button>
+    </div>
 
+    {% for temp in templates %}
+    <div class="col-md-4 mb-3">
+        <div class="card bg-dark border-secondary text-white p-3">
+            <h5 class="text-warning">{{ temp.nombre }}</h5>
+            <ul class="small list-unstyled">
+                {% for role, cant in temp.roles.items() %}
+                <li><span class="text-muted">•</span> {{ role }}: {{ cant }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No hay plantillas personalizadas. ¡Crea la primera!</p>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="templateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white border-warning">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Crear Nueva Plantilla</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/create_template/{{ guild_id }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de la Plantilla</label>
+                        <input type="text" name="nombre" class="form-control bg-secondary text-white border-0" placeholder="Ej: ZVZ Pequeña" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Definición de Roles (Separados por comas)</label>
+                        <textarea name="roles" class="form-control bg-secondary text-white border-0" rows="3" placeholder="Tanque:1, Healer:2, DPS:5" required></textarea>
+                        <div class="form-text text-muted">Sigue el formato: Nombre:Cantidad, Nombre:Cantidad</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="submit" class="btn btn-warning">Guardar Plantilla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <header>
     <h1 class="display-4 fw-bold text-uppercase" style="color: #d4af37;">Panel de Actividades</h1>
     <p class="lead">Estado de las Parties en Tiempo Real</p>
