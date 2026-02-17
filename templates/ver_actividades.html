@@ -97,8 +97,10 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label small text-muted">Plantilla de Composición</label>
-                    <select name="plantilla" class="form-select bg-dark text-white border-secondary">
-                        {% for t in templates %}<option value="{{ t.nombre }}">{{ t.nombre }}</option>{% endfor %}
+                    <select name="plantilla" class="form-select">
+                        {% for t in templates %}
+                            <option value="{{ t.nombre }}">{{ t.nombre }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="mb-3">

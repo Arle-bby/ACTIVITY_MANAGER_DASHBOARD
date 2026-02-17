@@ -126,16 +126,29 @@ def delete_template(guild_id, template_name):
 def view_activities(guild_id):
     if 'token' not in session: return redirect(url_for('index'))
     db = get_db()
-    parties = list(db["parties"].find({"guild_id": int(guild_id)}).sort("createdAt", -1))
-    templates = list(db["custom_templates"].find({"guild_id": int(guild_id)}))
     
-    # Pasamos si el usuario es STAFF para ver botones de borrar miembros
+    # 1. Obtener plantillas de la Base de Datos
+    db_templates = list(db["custom_templates"].find({"guild_id": int(guild_id)}))
+    
+    # 2. Definir las plantillas fijas (las que el bot tiene en su archivo templates.py)
+    # Copia aquí el diccionario que usas en el bot para que la web también lo vea
+    fixed_templates = [
+        {"nombre": "Ganking", "roles": {"Dps": 5, "Tank": 1, "Healer": 1}},
+        {"nombre": "HCE", "roles": {"Tank": 1, "Healer": 1, "Dps": 3}},
+        {"nombre": "ZVZ", "roles": {"Tank": 5, "Healer": 5, "Dps": 15}}
+    ]
+    
+    # 3. Combinar ambas listas
+    # Convertimos las de la DB al mismo formato simple
+    all_templates = fixed_templates + [{"nombre": t["nombre"], "roles": t["roles"]} for t in db_templates]
+
+    parties = list(db["parties"].find({"guild_id": int(guild_id)}).sort("createdAt", -1))
     es_staff = tiene_permiso_staff(guild_id)
     
     return render_template('ver_actividades.html', 
                            guild_id=guild_id, 
                            parties=parties, 
-                           templates=templates, 
+                           templates=all_templates, # Enviamos la lista combinada
                            es_staff=es_staff)
 
 @app.route('/launch_party/<guild_id>', methods=['POST'])
@@ -148,29 +161,48 @@ def launch_party_action(guild_id):
     nombre_plantilla = request.form.get('plantilla')
     descripcion = request.form.get('descripcion') or "Sin descripción"
     
-    # 2. Buscar plantilla y CONFIGURACIÓN del servidor
-    temp = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": nombre_plantilla})
-    config = db["config"].find_one({"guild_id": int(guild_id)})
+    # 2. Lógica para buscar la plantilla (Fija o Personalizada)
+    temp_roles = None
     
-    if not temp: return "Plantilla no encontrada", 400
+    # Primero buscamos en las plantillas personalizadas de MongoDB
+    db_temp = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": nombre_plantilla})
+    
+    if db_temp:
+        temp_roles = db_temp['roles']
+    else:
+        # Si no está en la DB, buscamos en las plantillas fijas (copia las de tu bot aquí)
+        PLANTILLAS_FIJAS = {
+            "Ganking": {"Dps": 5, "Tank": 1, "Healer": 1},
+            "HCE": {"Tank": 1, "Healer": 1, "Dps": 3},
+            "ZVZ": {"Tank": 5, "Healer": 5, "Dps": 15}
+        }
+        temp_roles = PLANTILLAS_FIJAS.get(nombre_plantilla)
 
+    if not temp_roles: 
+        return "Plantilla no encontrada", 400
+
+    # 3. Buscar CONFIGURACIÓN (Importante: usar 'server_config' como en el bot)
+    config = db["server_config"].find_one({"guild_id": int(guild_id)})
+    
     party_id = int(datetime.now().timestamp())
     
-    # 3. Guardar en MongoDB
+    # 4. Guardar en MongoDB (Aseguramos que la estructura coincida con el Bot)
     new_party = {
         "_id": party_id, 
         "guild_id": int(guild_id),
         "titulo": titulo,
         "descripcion": descripcion,
-        "limites": temp['roles'],
-        "participants": {r: [] for r in temp['roles']},
+        "limites": temp_roles,
+        "participants": {r: [] for r in temp_roles},
+        "banquillo": [],
+        "abandonos": [],
         "createdAt": datetime.now(timezone.utc)
     }
     db["parties"].insert_one(new_party)
 
-    # 4. ENVIAR A DISCORD (Si el webhook está configurado)
+    # 5. ENVIAR A DISCORD vía Webhook
     if config and config.get("webhook_url"):
-        roles_texto = "\n".join([f"🔹 **{r}**: 0/{n}" for r, n in temp['roles'].items()])
+        roles_texto = "\n".join([f"🔹 **{r}**: 0/{n}" for r, n in temp_roles.items()])
         url_web = f"{request.host_url}ver_actividades/{guild_id}"
         
         payload = {
@@ -178,7 +210,7 @@ def launch_party_action(guild_id):
                 "title": f"⚔️ ¡NUEVA ACTIVIDAD: {titulo}!",
                 "url": url_web,
                 "description": f"{descripcion}\n\n**Composición:**\n{roles_texto}\n\n[👉 Pulsa aquí para inscribirte]({url_web})",
-                "color": 0x00ff00, # Verde
+                "color": 0xFFD700, # Dorado como el bot
                 "footer": {"text": "Albion Manager - Dashboard Web"},
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }]
