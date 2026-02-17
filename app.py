@@ -122,6 +122,40 @@ def launch_party_action(guild_id):
         db["parties"].insert_one(new_party)
     return redirect(url_for('view_activities', guild_id=guild_id))
 
+def tiene_permiso_staff(guild_id):
+    if 'token' not in session: return False
+    db = get_db()
+    
+    # 1. Obtenemos el ID del rol de staff configurado para este server
+    config = db["config"].find_one({"guild_id": int(guild_id)})
+    if not config or "admin_role_id" not in config:
+        return False # No hay rol configurado, nadie tiene permiso web
+    
+    admin_role_id = str(config["admin_role_id"])
+    
+    # 2. Consultamos los roles del usuario actual en ese servidor vía Discord API
+    headers = {'Authorization': f"Bearer {session['token']}"}
+    r = requests.get(f"{API_ENDPOINT}/users/@me/guilds/{guild_id}/member", headers=headers)
+    
+    if r.status_code == 200:
+        member_data = r.json()
+        # Si el admin_role_id está en la lista de roles del usuario, tiene permiso
+        return admin_role_id in member_data.get("roles", [])
+    
+    return False
+
+@app.route('/remove_member/<guild_id>/<party_id>/<role_name>/<user_id>')
+def remove_member(guild_id, party_id, role_name, user_id):
+    if not tiene_permiso_staff(guild_id): return "No tienes el rol de Staff", 403
+    
+    db = get_db()
+    # Usamos $pull para sacar al usuario de la lista de ese rol específico
+    db["parties"].update_one(
+        {"_id": int(party_id)},
+        {"$pull": {f"participants.{role_name}": {"id": int(user_id)}}}
+    )
+    return redirect(url_for('view_activities', guild_id=guild_id))
+
 @app.route('/login')
 def login():
     auth_url = f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope=identify+guilds"

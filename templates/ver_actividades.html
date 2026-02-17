@@ -46,4 +46,33 @@
         </form>
     </div>
 </div>
+
+{% for rol, lista in party.participants.items() %}
+<div class="col-12 mb-2 p-2 rounded bg-dark border border-secondary">
+    <div class="d-flex justify-content-between border-bottom border-secondary mb-2">
+        <span class="fw-bold text-info">{{ rol }}</span>
+        <span class="small">{{ lista|length }} / {{ party.limites[rol] }}</span>
+    </div>
+
+    <div class="list-group list-group-flush">
+        {% for user in lista %}
+        <div class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center p-1 border-0">
+            <span>👤 {{ user.name }}</span>
+            
+            {% if es_staff %}
+            <a href="/remove_member/{{ guild_id }}/{{ party._id }}/{{ rol }}/{{ user.id }}" 
+               class="btn btn-sm btn-outline-danger py-0" 
+               onclick="return confirm('¿Echar a {{ user.name }} de este rol?')">
+               ×
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        {% if lista|length == 0 %}
+        <small class="text-muted italic">Vacío</small>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
 {% endblock %}
