@@ -1,25 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="display-4 text-warning fw-bold">Gestión de Hermandad</h1>
-    <p class="text-muted">ID del Servidor: {{ guild_id }}</p>
-</div>
-<div class="row g-4 justify-content-center">
-    <div class="col-md-4">
-        <div class="card bg-dark border-primary p-4 h-100 text-center shadow">
-            <h1 class="mb-3">⚔️</h1>
-            <h3 class="text-primary">Actividades</h3>
-            <p class="small text-muted">Lanza parties a Discord y mira quién se une.</p>
-            <a href="/ver_actividades/{{ guild_id }}" class="btn btn-primary mt-auto">Ir a Actividades</a>
+<div class="container text-center mt-5">
+    <h1 class="text-white mb-4">Panel de Control</h1>
+    <p class="text-muted">Servidor ID: <span class="text-info">{{ guild_id }}</span></p>
+
+    <div class="row mt-5 g-4">
+        <div class="col-md-4">
+            <a href="/ver_actividades/{{ guild_id }}" class="card bg-dark border-primary p-4 text-decoration-none h-100 shadow hover-card">
+                <div class="display-4 mb-3">⚔️</div>
+                <h3 class="text-white">Actividades</h3>
+                <p class="text-muted small">Lanza nuevas parties y gestiona los grupos en vivo.</p>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/plantillas/{{ guild_id }}" class="card bg-dark border-warning p-4 text-decoration-none h-100 shadow hover-card">
+                <div class="display-4 mb-3">📜</div>
+                <h3 class="text-white">Plantillas</h3>
+                <p class="text-muted small">Configura composiciones de equipo (HCE, ZvZ, Ganking).</p>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a href="/settings/{{ guild_id }}" class="card bg-dark border-info p-4 text-decoration-none h-100 shadow hover-card">
+                <div class="display-4 mb-3">⚙️</div>
+                <h3 class="text-white">Ajustes</h3>
+                <p class="text-muted small">Configura el Rol de Staff y el Webhook de anuncios.</p>
+            </a>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card bg-dark border-warning p-4 h-100 text-center shadow">
-            <h1 class="mb-3">📋</h1>
-            <h3 class="text-warning">Plantillas</h3>
-            <p class="small text-muted">Configura las composiciones de roles (Tank, Heal, DPS).</p>
-            <a href="/plantillas/{{ guild_id }}" class="btn btn-warning mt-auto">Gestionar Comps</a>
-        </div>
-    </div>
 </div>
+
+<style>
+    .hover-card:hover { transform: translateY(-5px); transition: 0.3s; border-width: 2px; }
+    .card { transition: 0.3s; }
+</style>
 {% endblock %}

@@ -34,23 +34,24 @@ def is_user_admin(guild_id):
     return False
 
 def tiene_permiso_staff(guild_id):
-    """Verifica si el usuario tiene el ROL específico de Staff configurado en la DB."""
     if 'token' not in session: return False
     db = get_db()
-    
     config = db["config"].find_one({"guild_id": int(guild_id)})
-    if not config or "admin_role_id" not in config:
-        return False 
-    
-    admin_role_id = str(config["admin_role_id"])
     headers = {'Authorization': f"Bearer {session['token']}"}
-    
-    # Pedimos los datos del miembro en ese servidor específico
-    r = requests.get(f"{API_ENDPOINT}/users/@me/guilds/{guild_id}/member", headers=headers)
-    
-    if r.status_code == 200:
-        member_data = r.json()
-        return admin_role_id in member_data.get("roles", [])
+
+    # Opción A: Es el Dueño/Admin del server (Auto-reconocimiento)
+    r_guilds = requests.get(f"{API_ENDPOINT}/users/@me/guilds", headers=headers)
+    if r_guilds.status_code == 200:
+        for g in r_guilds.json():
+            if g['id'] == str(guild_id) and (int(g['permissions']) & 0x8) == 0x8:
+                return True
+
+    # Opción B: Tiene el rol configurado por el comando /setup
+    if config and "admin_role_id" in config:
+        r_mem = requests.get(f"{API_ENDPOINT}/users/@me/guilds/{guild_id}/member", headers=headers)
+        if r_mem.status_code == 200:
+            return str(config["admin_role_id"]) in [str(r) for r in r_mem.json().get("roles", [])]
+            
     return False
 
 # --- RUTAS DE NAVEGACIÓN ---
@@ -187,6 +188,20 @@ def launch_party_action(guild_id):
         except Exception as e:
             print(f"Error enviando webhook: {e}")
 
+    return redirect(url_for('view_activities', guild_id=guild_id))
+
+# Enviar a Discord usando lo que el bot guardó
+    config = db["config"].find_one({"guild_id": int(guild_id)})
+    if config and config.get("webhook_url"):
+        payload = {
+            "embeds": [{
+                "title": f"⚔️ ACTIVIDAD: {request.form.get('titulo')}",
+                "description": "Inscríbete en el Dashboard",
+                "color": 0x7289da
+            }]
+        }
+        requests.post(config["webhook_url"], json=payload)
+    
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/remove_member/<guild_id>/<party_id>/<role_name>/<user_id>')
