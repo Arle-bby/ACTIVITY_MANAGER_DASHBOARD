@@ -6,25 +6,29 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Configuración de MongoDB (Usa la misma URL que en Railway)
+# Configuración de MongoDB
 MONGO_URL = os.getenv('MONGO_URL')
+# Creamos el cliente fuera para que sea global
 cluster = AsyncIOMotorClient(MONGO_URL)
 db = cluster["albion_db"]
 collection_parties = db["parties"]
 
 @app.route('/')
 def index():
-    # Usamos una pequeña función para ejecutar la consulta asíncrona
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    async def get_data():
+    try:
+        # Forma simplificada de obtener datos en Flask
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
         cursor = collection_parties.find().sort("createdAt", -1)
-        return await cursor.to_list(length=50)
-
-    parties_data = loop.run_until_complete(get_data())
-    return render_template('index.html', parties=parties_data)
+        parties_data = loop.run_until_complete(cursor.to_list(length=50))
+        loop.close()
+        
+        return render_template('index.html', parties=parties_data)
+    except Exception as e:
+        return f"Error conectando a la base de datos: {e}", 500
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    # Render usa el puerto 10000 por defecto
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
