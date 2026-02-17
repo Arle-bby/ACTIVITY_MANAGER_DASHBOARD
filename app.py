@@ -141,22 +141,52 @@ def view_activities(guild_id):
 def launch_party_action(guild_id):
     if 'token' not in session: return redirect(url_for('index'))
     db = get_db()
-    temp = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": request.form.get('plantilla')})
     
-    if temp:
-        new_party = {
-            "_id": int(datetime.now().timestamp()), 
-            "guild_id": int(guild_id),
-            "creador": "Web",
-            "titulo": request.form.get('titulo'),
-            "descripcion": request.form.get('descripcion'),
-            "limites": temp['roles'],
-            "participants": {r: [] for r in temp['roles']},
-            "banquillo": [],
-            "abandonos": [],
-            "createdAt": datetime.now(timezone.utc)
+    # 1. Obtener datos del formulario
+    titulo = request.form.get('titulo')
+    nombre_plantilla = request.form.get('plantilla')
+    descripcion = request.form.get('descripcion') or "Sin descripción"
+    
+    # 2. Buscar plantilla y CONFIGURACIÓN del servidor
+    temp = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": nombre_plantilla})
+    config = db["config"].find_one({"guild_id": int(guild_id)})
+    
+    if not temp: return "Plantilla no encontrada", 400
+
+    party_id = int(datetime.now().timestamp())
+    
+    # 3. Guardar en MongoDB
+    new_party = {
+        "_id": party_id, 
+        "guild_id": int(guild_id),
+        "titulo": titulo,
+        "descripcion": descripcion,
+        "limites": temp['roles'],
+        "participants": {r: [] for r in temp['roles']},
+        "createdAt": datetime.now(timezone.utc)
+    }
+    db["parties"].insert_one(new_party)
+
+    # 4. ENVIAR A DISCORD (Si el webhook está configurado)
+    if config and config.get("webhook_url"):
+        roles_texto = "\n".join([f"🔹 **{r}**: 0/{n}" for r, n in temp['roles'].items()])
+        url_web = f"{request.host_url}ver_actividades/{guild_id}"
+        
+        payload = {
+            "embeds": [{
+                "title": f"⚔️ ¡NUEVA ACTIVIDAD: {titulo}!",
+                "url": url_web,
+                "description": f"{descripcion}\n\n**Composición:**\n{roles_texto}\n\n[👉 Pulsa aquí para inscribirte]({url_web})",
+                "color": 0x00ff00, # Verde
+                "footer": {"text": "Albion Manager - Dashboard Web"},
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }]
         }
-        db["parties"].insert_one(new_party)
+        try:
+            requests.post(config["webhook_url"], json=payload, timeout=5)
+        except Exception as e:
+            print(f"Error enviando webhook: {e}")
+
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/remove_member/<guild_id>/<party_id>/<role_name>/<user_id>')
@@ -186,6 +216,37 @@ def move_member(guild_id, party_id, old_role, new_role, user_id, user_name):
         {"$push": {f"participants.{new_role}": {"id": int(user_id), "name": user_name}}}
     )
     return redirect(url_for('view_activities', guild_id=guild_id))
+
+@app.route('/settings/<guild_id>')
+def server_settings(guild_id):
+    if 'token' not in session or not is_user_admin(guild_id):
+        return "No tienes permisos de Administrador", 403
+    
+    db = get_db()
+    # Buscamos si ya existe configuración previa
+    config = db["config"].find_one({"guild_id": int(guild_id)})
+    return render_template('settings.html', guild_id=guild_id, config=config)
+
+@app.route('/save_settings/<guild_id>', methods=['POST'])
+def save_settings(guild_id):
+    if 'token' not in session or not is_user_admin(guild_id):
+        return "No autorizado", 403
+    
+    db = get_db()
+    webhook_url = request.form.get('webhook_url')
+    admin_role_id = request.form.get('admin_role_id')
+    
+    # Guardamos o actualizamos la config de ESTE servidor
+    db["config"].update_one(
+        {"guild_id": int(guild_id)},
+        {"$set": {
+            "webhook_url": webhook_url,
+            "admin_role_id": admin_role_id
+        }},
+        upsert=True
+    )
+    flash("Configuración guardada correctamente")
+    return redirect(url_for('server_settings', guild_id=guild_id))
 
 # --- AUTH DISCORD ---
 

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-warning">⚙️ Ajustes del Servidor</h2>
+    <p class="text-muted">Configura dónde se publicarán las actividades y quién puede gestionarlas.</p>
+
+    <div class="card bg-dark border-secondary p-4 shadow">
+        <form action="/save_settings/{{ guild_id }}" method="POST">
+            <div class="mb-4">
+                <label class="form-label text-white">🔗 URL del Webhook de Discord</label>
+                <input type="url" name="webhook_url" class="form-control bg-dark text-white border-secondary" 
+                       placeholder="https://discord.com/api/webhooks/..." 
+                       value="{{ config.webhook_url if config else '' }}" required>
+                <small class="text-muted">El canal donde el bot anunciará las nuevas parties.</small>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label text-white">🛡️ ID del Rol de Staff (Admin del Bot)</label>
+                <input type="text" name="admin_role_id" class="form-control bg-dark text-white border-secondary" 
+                       placeholder="Ej: 1326688929738522684" 
+                       value="{{ config.admin_role_id if config else '' }}" required>
+                <small class="text-muted">Los usuarios con este Rol podrán mover y echar gente desde la web.</small>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="/dashboard/{{ guild_id }}" class="btn btn-outline-light">Volver</a>
+                <button type="submit" class="btn btn-warning px-5 fw-bold">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
