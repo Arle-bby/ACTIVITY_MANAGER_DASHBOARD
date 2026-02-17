@@ -20,16 +20,25 @@ def get_db():
 @app.route('/')
 def index():
     if 'token' not in session:
-        return render_template('login.html') # Una página simple con un botón de Login
+        return render_template('login.html')
     
-    # Obtener servidores del usuario
     headers = {'Authorization': f"Bearer {session['token']}"}
-    user_guilds = requests.get(f"{API_ENDPOINT}/users/@me/guilds", headers=headers).json()
+    # Servidores del usuario
+    user_guilds = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=headers).json()
     
-    # Filtrar solo servidores donde es Admin (Permissions & 0x8)
-    admin_guilds = [g for g in user_guilds if (int(g['permissions']) & 0x8) == 0x8]
+    # Servidores del BOT (necesitas el BOT_TOKEN en tus variables de entorno)
+    bot_headers = {'Authorization': f"Bot {os.getenv('DISCORD_TOKEN')}"}
+    bot_guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=bot_headers).json()
+    bot_guild_ids = [g['id'] for g in bot_guilds_resp]
     
-    return render_template('select_server.html', guilds=admin_guilds)
+    # Filtrar: Que el usuario sea Admin Y que el bot esté en el server
+    final_guilds = []
+    for g in user_guilds:
+        is_admin = (int(g['permissions']) & 0x8) == 0x8
+        if is_admin and g['id'] in bot_guild_ids:
+            final_guilds.append(g)
+            
+    return render_template('select_server.html', guilds=final_guilds)
 
 @app.route('/dashboard/<guild_id>')
 def server_dashboard(guild_id):
