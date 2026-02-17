@@ -44,12 +44,34 @@ def server_dashboard(guild_id):
     # Esta es la página principal del servidor (el menú de 3 botones)
     return render_template('index.html', guild_id=guild_id)
 
+def is_user_admin(guild_id):
+    headers = {'Authorization': f"Bearer {session.get('token')}"}
+    r = requests.get(f"{API_ENDPOINT}/users/@me/guilds", headers=headers)
+    if r.status_code != 200: return False
+    
+    user_guilds = r.json()
+    for g in user_guilds:
+        if g['id'] == str(guild_id):
+            # Verificamos si tiene el bit de administrador (0x8)
+            return (int(g['permissions']) & 0x8) == 0x8
+    return False
+
 @app.route('/plantillas/<guild_id>')
 def view_templates(guild_id):
-    if 'token' not in session: return redirect(url_for('index'))
+    if 'token' not in session or not is_user_admin(guild_id):
+        return "Acceso denegado: Se requieren permisos de Administrador", 403
+    
     db = get_db()
     templates = list(db["custom_templates"].find({"guild_id": int(guild_id)}))
     return render_template('plantillas.html', guild_id=guild_id, templates=templates)
+
+@app.route('/delete_template/<guild_id>/<template_name>')
+def delete_template(guild_id, template_name):
+    if 'token' not in session or not is_user_admin(guild_id): return "No autorizado", 403
+    
+    db = get_db()
+    db["custom_templates"].delete_one({"guild_id": int(guild_id), "nombre": template_name})
+    return redirect(url_for('view_templates', guild_id=guild_id))
 
 @app.route('/ver_actividades/<guild_id>')
 def view_activities(guild_id):
