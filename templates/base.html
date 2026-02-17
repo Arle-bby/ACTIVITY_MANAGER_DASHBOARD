@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albion Guild Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #121417; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: #1c1e22; border-bottom: 2px solid #ffaa00; }
+        .card { background-color: #1c1e22; border: 1px solid #333; }
+        .text-warning { color: #ffaa00 !important; }
+        .btn-warning { background-color: #ffaa00; border: none; color: #000; font-weight: bold; }
+        .btn-warning:hover { background-color: #e69900; }
+        /* Estilos para las tarjetas de party */
+        .card-party { border-left: 5px solid #ffaa00; transition: 0.3s; }
+        .card-party:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4 shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-warning" href="/">⚔️ ALBION MANAGER</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white-50" href="/logout">Cerrar Sesión</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
