@@ -161,12 +161,29 @@ def launch_party_action(guild_id):
 
 @app.route('/remove_member/<guild_id>/<party_id>/<role_name>/<user_id>')
 def remove_member(guild_id, party_id, role_name, user_id):
-    if not tiene_permiso_staff(guild_id): return "No tienes el rol de Staff", 403
-    
+    if not tiene_permiso_staff(guild_id): return "No autorizado", 403
     db = get_db()
     db["parties"].update_one(
         {"_id": int(party_id)},
         {"$pull": {f"participants.{role_name}": {"id": int(user_id)}}}
+    )
+    return redirect(url_for('view_activities', guild_id=guild_id))
+
+@app.route('/move_member/<guild_id>/<party_id>/<old_role>/<new_role>/<user_id>/<user_name>')
+def move_member(guild_id, party_id, old_role, new_role, user_id, user_name):
+    if not tiene_permiso_staff(guild_id): return "No autorizado", 403
+    db = get_db()
+    
+    # 1. Sacar del rol viejo
+    db["parties"].update_one(
+        {"_id": int(party_id)},
+        {"$pull": {f"participants.{old_role}": {"id": int(user_id)}}}
+    )
+    
+    # 2. Meter en el rol nuevo
+    db["parties"].update_one(
+        {"_id": int(party_id)},
+        {"$push": {f"participants.{new_role}": {"id": int(user_id), "name": user_name}}}
     )
     return redirect(url_for('view_activities', guild_id=guild_id))
 
