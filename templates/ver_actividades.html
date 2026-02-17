@@ -11,16 +11,43 @@
 <div class="row">
     {% for party in parties %}
     <div class="col-md-6 mb-4">
-        <div class="card bg-dark border-primary p-3 shadow">
-            <div class="d-flex justify-content-between">
-                <h4 class="text-white">{{ party.titulo }}</h4>
+        <div class="card bg-dark border-primary p-3 shadow h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="text-white mb-0">{{ party.titulo }}</h4>
                 <span class="text-muted small">{{ party.createdAt.strftime('%H:%M') }} UTC</span>
             </div>
-            <p class="text-muted">{{ party.descripcion }}</p>
-            <div class="row g-2">
+            <p class="text-muted small">{{ party.descripcion }}</p>
+            
+            <div class="row g-3">
                 {% for rol, lista in party.participants.items() %}
-                <div class="col-6 small text-white-50 border border-secondary p-1 rounded">
-                    {{ rol }}: {{ lista|length }} / {{ party.limites[rol] }}
+                <div class="col-12">
+                    <div class="p-2 rounded bg-opacity-10 bg-light border border-secondary">
+                        <div class="d-flex justify-content-between border-bottom border-secondary mb-2 pb-1">
+                            <span class="fw-bold text-info small">{{ rol }}</span>
+                            <span class="badge bg-dark text-info border border-info">{{ lista|length }} / {{ party.limites[rol] }}</span>
+                        </div>
+
+                        <div class="list-group list-group-flush">
+                            {% for user in lista %}
+                            <div class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center p-1 border-0 small">
+                                <span>👤 {{ user.name }}</span>
+                                
+                                {% if es_staff %}
+                                <a href="/remove_member/{{ guild_id }}/{{ party._id }}/{{ rol }}/{{ user.id }}" 
+                                   class="btn btn-sm btn-outline-danger py-0 px-1" 
+                                   style="line-height: 1;"
+                                   onclick="return confirm('¿Echar a {{ user.name }} de este rol?')">
+                                   &times;
+                                </a>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            
+                            {% if lista|length == 0 %}
+                            <small class="text-muted fst-italic">Sin inscritos</small>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -46,33 +73,4 @@
         </form>
     </div>
 </div>
-
-{% for rol, lista in party.participants.items() %}
-<div class="col-12 mb-2 p-2 rounded bg-dark border border-secondary">
-    <div class="d-flex justify-content-between border-bottom border-secondary mb-2">
-        <span class="fw-bold text-info">{{ rol }}</span>
-        <span class="small">{{ lista|length }} / {{ party.limites[rol] }}</span>
-    </div>
-
-    <div class="list-group list-group-flush">
-        {% for user in lista %}
-        <div class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center p-1 border-0">
-            <span>👤 {{ user.name }}</span>
-            
-            {% if es_staff %}
-            <a href="/remove_member/{{ guild_id }}/{{ party._id }}/{{ rol }}/{{ user.id }}" 
-               class="btn btn-sm btn-outline-danger py-0" 
-               onclick="return confirm('¿Echar a {{ user.name }} de este rol?')">
-               ×
-            </a>
-            {% endif %}
-        </div>
-        {% endfor %}
-        
-        {% if lista|length == 0 %}
-        <small class="text-muted italic">Vacío</small>
-        {% endif %}
-    </div>
-</div>
-{% endfor %}
 {% endblock %}
