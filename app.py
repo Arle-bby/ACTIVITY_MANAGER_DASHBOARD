@@ -1,6 +1,7 @@
 from flask import Flask, render_template, session, redirect, url_for, request
 from pymongo import MongoClient
 from flask import flash
+from datetime import datetime, timezone
 import os
 import requests
 
@@ -109,6 +110,62 @@ def create_template(guild_id):
         return redirect(url_for('dashboard', guild_id=guild_id))
     except Exception as e:
         return f"Error al crear la plantilla: {e}", 400
+
+@app.route('/launch_party/<guild_id>', methods=['POST'])
+def launch_party(guild_id):
+    if 'token' not in session: return redirect(url_for('index'))
+    
+    titulo = request.form.get('titulo')
+    descripcion = request.form.get('descripcion')
+    plantilla_nombre = request.form.get('plantilla')
+    
+    db = get_db()
+    # Buscamos los roles de la plantilla seleccionada
+    temp = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": plantilla_nombre})
+    
+    if not temp:
+        return "Plantilla no encontrada", 400
+
+    # Creamos el documento de la party
+    # Nota: El _id aquí será un timestamp porque no viene de un mensaje de Discord
+    new_party = {
+        "_id": int(datetime.now().timestamp()), 
+        "guild_id": int(guild_id),
+        "creador": "Web Dashboard", # O el ID de Discord del usuario en sesión
+        "titulo": titulo,
+        "descripcion": descripcion,
+        "limites": temp['roles'],
+        "participants": {r: [] for r in temp['roles']},
+        "banquillo": [],
+        "abandonos": [],
+        "createdAt": datetime.now(timezone.utc)
+    }
+    
+    db["parties"].insert_one(new_party)
+    return redirect(url_for('dashboard', guild_id=guild_id))
+
+@app.route('/plantillas/<guild_id>')
+def view_templates(guild_id):
+    if 'token' not in session: return redirect(url_for('index'))
+    db = get_db()
+    templates = list(db["custom_templates"].find({"guild_id": int(guild_id)}))
+    return render_template('plantillas.html', guild_id=guild_id, templates=templates)
+
+# RUTA: Ver Actividades
+@app.route('/ver_actividades/<guild_id>')
+def view_activities(guild_id):
+    if 'token' not in session: return redirect(url_for('index'))
+    db = get_db()
+    parties = list(db["parties"].find({"guild_id": int(guild_id)}).sort("createdAt", -1))
+    return render_template('ver_actividades.html', guild_id=guild_id, parties=parties)
+
+# RUTA: Lanzar Actividad (Actualizada)
+@app.route('/launch_party/<guild_id>', methods=['POST'])
+def launch_party(guild_id):
+    if 'token' not in session: return redirect(url_for('index'))
+    # ... (Tu lógica anterior de guardar en Mongo) ...
+    # Redirigir a ver actividades para ver el resultado
+    return redirect(url_for('view_activities', guild_id=guild_id))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

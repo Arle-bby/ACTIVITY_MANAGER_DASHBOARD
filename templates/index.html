@@ -16,115 +16,42 @@
     </style>
 </head>
 <body>
-<div class="row mt-5">
-    <div class="col-12 d-flex justify-content-between align-items-center mb-3">
-        <h3 style="color: #ffaa00;">📋 Plantillas del Gremio</h3>
-        <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#templateModal">
-            + Nueva Plantilla
-        </button>
-    </div>
-
-    {% for temp in templates %}
-    <div class="col-md-4 mb-3">
-        <div class="card bg-dark border-secondary text-white p-3">
-            <h5 class="text-warning">{{ temp.nombre }}</h5>
-            <ul class="small list-unstyled">
-                {% for role, cant in temp.roles.items() %}
-                <li><span class="text-muted">•</span> {{ role }}: {{ cant }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-    {% else %}
-    <p class="text-muted">No hay plantillas personalizadas. ¡Crea la primera!</p>
-    {% endfor %}
-</div>
-
-<div class="modal fade" id="templateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content bg-dark text-white border-warning">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title">Crear Nueva Plantilla</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="/create_template/{{ guild_id }}" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre de la Plantilla</label>
-                        <input type="text" name="nombre" class="form-control bg-secondary text-white border-0" placeholder="Ej: ZVZ Pequeña" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Definición de Roles (Separados por comas)</label>
-                        <textarea name="roles" class="form-control bg-secondary text-white border-0" rows="3" placeholder="Tanque:1, Healer:2, DPS:5" required></textarea>
-                        <div class="form-text text-muted">Sigue el formato: Nombre:Cantidad, Nombre:Cantidad</div>
-                    </div>
-                </div>
-                <div class="modal-footer border-secondary">
-                    <button type="submit" class="btn btn-warning">Guardar Plantilla</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 <header>
-    <h1 class="display-4 fw-bold text-uppercase" style="color: #d4af37;">Panel de Actividades</h1>
-    <p class="lead">Estado de las Parties en Tiempo Real</p>
+    <h1 class="display-4 fw-bold" style="color: #d4af37;">{{ guild_name }}</h1>
+    <p class="lead">Gestión de Hermandad</p>
 </header>
 
 <div class="container mt-5">
-    {% if not parties %}
-        <div class="alert alert-info text-center bg-dark text-light border-secondary">
-            ⚔️ No hay actividades activas en este momento.
-        </div>
-    {% endif %}
-
-    <div class="row">
-        {% for party in parties %}
-        <div class="col-md-6">
-            <div class="card card-party shadow-lg">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="card-title h4">🛡️ {{ party.titulo }}</h3>
-                        <span class="badge bg-warning text-dark">{{ party.createdAt.strftime('%H:%M') if party.createdAt else '--:--' }} UTC</span>
-                    </div>
-                    <p class="text-muted small mb-2">{{ party.descripcion }}</p>
-                    <hr class="border-secondary">
-                    
-                    <div class="mb-3">
-                        <span class="leader-name">👑 Líder:</span> <span class="text-light">Jugador ID: {{ party.creador }}</span>
-                    </div>
-
-                    <div class="row g-2">
-                        {% for rol, lista in party.participants.items() %}
-                        <div class="col-6">
-                            <div class="p-2 border border-secondary rounded bg-dark">
-                                <strong class="small text-uppercase">{{ rol }}</strong>
-                                <div class="small">
-                                    {% if lista %}
-                                        {{ lista|length }} / {{ party.limites[rol] }}
-                                    {% else %}
-                                        <span class="text-muted small">Vaciado</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    {% if party.abandonos %}
-                    <div class="mt-3">
-                        <h6 class="text-danger small fw-bold text-uppercase">🏃 Abandonos Recientes:</h6>
-                        <ul class="list-unstyled abandonos ps-2">
-                            {% for abandono in party.abandonos %}
-                                <li>{{ abandono }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
+    <div class="row g-4 text-center">
+        <div class="col-md-4">
+            <div class="card bg-dark border-primary p-4 h-100 shadow">
+                <h2 class="display-5">⚔️</h2>
+                <h4 class="text-primary">Actividades</h4>
+                <p class="text-muted small">Lanza nuevas parties a Discord o supervisa las actuales.</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#launchModal">Lanzar Nueva</button>
+                    <a href="/ver_actividades/{{ guild_id }}" class="btn btn-outline-primary">Ver Activas</a>
                 </div>
             </div>
         </div>
-        {% endfor %}
+
+        <div class="col-md-4">
+            <div class="card bg-dark border-warning p-4 h-100 shadow">
+                <h2 class="display-5">📋</h2>
+                <h4 class="text-warning">Plantillas</h4>
+                <p class="text-muted small">Crea y edita las composiciones de grupo (ZVZ, Ganking, etc).</p>
+                <a href="/plantillas/{{ guild_id }}" class="btn btn-warning text-dark fw-bold">Gestionar Plantillas</a>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary p-4 h-100 shadow opacity-50">
+                <h2 class="display-5">⚙️</h2>
+                <h4 class="text-secondary">Ajustes</h4>
+                <p class="text-muted small">Configuración del Bot y permisos (Próximamente).</p>
+                <button class="btn btn-outline-secondary disabled">Configurar</button>
+            </div>
+        </div>
     </div>
 </div>
 
