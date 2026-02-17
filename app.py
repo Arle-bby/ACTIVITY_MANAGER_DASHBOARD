@@ -23,17 +23,22 @@ def index():
         return render_template('login.html')
     
     headers = {'Authorization': f"Bearer {session['token']}"}
-    # Servidores del usuario
     user_guilds = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=headers).json()
     
-    # Servidores del BOT (necesitas el BOT_TOKEN en tus variables de entorno)
-    bot_headers = {'Authorization': f"Bot {os.getenv('DISCORD_TOKEN')}"}
+    # Verificación del Bot Token
+    bot_token = os.getenv('DISCORD_TOKEN')
+    bot_headers = {'Authorization': f"Bot {bot_token}"}
     bot_guilds_resp = requests.get("https://discord.com/api/v10/users/@me/guilds", headers=bot_headers).json()
+    
+    # Si Discord devuelve un error en lugar de una lista, lo capturamos aquí
+    if isinstance(bot_guilds_resp, dict) and "message" in bot_guilds_resp:
+        return f"Error de Discord API (Bot Token): {bot_guilds_resp['message']}. Verifica el DISCORD_TOKEN en Render.", 500
+
     bot_guild_ids = [g['id'] for g in bot_guilds_resp]
     
-    # Filtrar: Que el usuario sea Admin Y que el bot esté en el server
     final_guilds = []
     for g in user_guilds:
+        # Permiso de Administrador es 0x8
         is_admin = (int(g['permissions']) & 0x8) == 0x8
         if is_admin and g['id'] in bot_guild_ids:
             final_guilds.append(g)
