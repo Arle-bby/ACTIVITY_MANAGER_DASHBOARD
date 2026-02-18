@@ -197,11 +197,11 @@ def launch_party_action(guild_id):
     }
     db["parties"].insert_one(new_party)
 
-    # 5. Generar filas de botones (Action Rows) CAMBIADOS PARA COINCIDIR CON EL BOT
+    # 5. Generar filas de botones (Action Rows)
     components = []
     all_roles = list(temp_roles.keys())
     
-    # Fila 1 y 2: Botones de Roles (Formato: role_Nombre_ID)
+    # Fila 1 y 2: Botones de Roles
     for i in range(0, min(len(all_roles), 10), 5):
         chunk = all_roles[i:i+5]
         components.append({
@@ -209,7 +209,7 @@ def launch_party_action(guild_id):
             "components": [{"type": 2, "style": 2, "label": r, "custom_id": f"role_{r}_{real_msg_id}"} for r in chunk]
         })
 
-    # Fila final: Gestión (bench_ID y leave_ID)
+    # Fila 3: Banquillo y Salirse
     components.append({
         "type": 1,
         "components": [
@@ -218,7 +218,17 @@ def launch_party_action(guild_id):
         ]
     })
 
-    # Actualizar mensaje con botones
+    # Fila 4: GESTIÓN (Para que aparezcan los botones de Gestionar, Avisar y Borrar)
+    components.append({
+        "type": 1,
+        "components": [
+            {"type": 2, "style": 2, "label": "Gestionar", "emoji": {"name": "⚙️"}, "custom_id": "persistent_manage_btn"},
+            {"type": 2, "style": 1, "label": "Avisar", "emoji": {"name": "🔔"}, "custom_id": "persistent_notify_btn"},
+            {"type": 2, "style": 4, "label": "Borrar", "emoji": {"name": "🗑️"}, "custom_id": "persistent_delete_btn"}
+        ]
+    })
+
+    # Actualizar mensaje con todos los botones
     requests.patch(f"{url}/{real_msg_id}", headers=headers, json={"components": components})
 
     flash("¡Party lanzada con éxito!")
