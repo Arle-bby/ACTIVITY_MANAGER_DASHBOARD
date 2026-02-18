@@ -1,74 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="text-primary">⚔️ Actividades en Vivo</h2>
-    <div>
-        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#launchModal">+ Lanzar Actividad</button>
-        <a href="/dashboard/{{ guild_id }}" class="btn btn-outline-light">Volver al Panel</a>
-    </div>
+    <h2 style="color: white; font-weight: 800;">⚔️ Actividades en Vivo</h2>
+    <button class="btn btn-albion" data-bs-toggle="modal" data-bs-target="#launchModal">+ Lanzar Actividad</button>
 </div>
 
 <div class="row">
     {% for party in parties %}
     <div class="col-md-6 mb-4">
-        <div class="card bg-dark border-primary p-3 shadow h-100">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h4 class="text-white mb-0">{{ party.titulo }}</h4>
-                <span class="text-muted small">{{ party.createdAt.strftime('%H:%M') }} UTC</span>
+        <div class="card p-4 border-0 shadow-lg">
+            <div class="d-flex justify-content-between border-bottom border-secondary pb-3 mb-3">
+                <h4 class="fw-bold text-warning mb-0">{{ party.titulo }}</h4>
+                <span class="badge bg-dark text-muted border border-secondary">{{ party.createdAt.strftime('%H:%M') }}</span>
             </div>
-            <p class="text-muted small border-bottom border-secondary pb-2">{{ party.descripcion }}</p>
             
             <div class="row g-3">
                 {% for rol, lista in party.participants.items() %}
                 <div class="col-12">
-                    <div class="p-2 rounded bg-opacity-10 bg-light border border-secondary">
-                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom border-secondary">
-                            <span class="fw-bold text-info small text-uppercase">{{ rol }}</span>
-                            <span class="badge bg-dark text-info border border-info">
-                                {{ lista|length }} / {{ party.limites[rol] }}
-                            </span>
+                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="role-badge">{{ rol }}</span>
+                            <span class="small text-muted">{{ lista|length }} / {{ party.limites[rol] }}</span>
                         </div>
-
-                        <div class="list-group list-group-flush">
+                        <div class="list-unstyled">
                             {% for user in lista %}
-                            <div class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center p-1 border-0 small">
-                                <div>
-                                    <span class="text-muted me-1">👤</span>
-                                    <span>{{ user.name }}</span>
+                            <div class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25 small">
+                                <span><span class="text-warning opacity-50">👤</span> {{ user.name }}</span>
                                 </div>
-                                
-                                {% if es_staff %}
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-xs btn-outline-info py-0 px-1 dropdown-toggle" data-bs-toggle="dropdown" style="font-size: 0.75rem;">
-                                        🔄
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-dark shadow">
-                                        <li><h6 class="dropdown-header">Mover a...</h6></li>
-                                        {% for target_role in party.limites.keys() %}
-                                            {% if target_role != rol %}
-                                            <li>
-                                                <a class="dropdown-item small" href="/move_member/{{ guild_id }}/{{ party._id }}/{{ rol }}/{{ target_role }}/{{ user.id }}/{{ user.name }}">
-                                                    {{ target_role }}
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </ul>
-
-                                    <a href="/remove_member/{{ guild_id }}/{{ party._id }}/{{ rol }}/{{ user.id }}" 
-                                       class="btn btn-xs btn-outline-danger py-0 px-1 ms-1" 
-                                       style="font-size: 0.75rem;"
-                                       onclick="return confirm('¿Expulsar a {{ user.name }}?')">
-                                       🗑️
-                                    </a>
-                                </div>
-                                {% endif %}
-                            </div>
                             {% endfor %}
-                            
-                            {% if lista|length == 0 %}
-                            <small class="text-muted fst-italic p-1">Sin inscritos</small>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -76,43 +35,6 @@
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="col-12 text-center py-5">
-        <p class="text-muted fst-italic">No hay actividades activas en este momento.</p>
-    </div>
     {% endfor %}
-</div>
-
-<div class="modal fade" id="launchModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form action="/launch_party/{{ guild_id }}" method="POST" class="modal-content bg-dark text-white border-primary shadow-lg">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title">⚔️ Nueva Actividad</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Título</label>
-                    <input type="text" name="titulo" class="form-control bg-dark text-white border-secondary" placeholder="Ej: ZVZ Castillo Martlock" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Plantilla de Composición</label>
-                    <select name="plantilla" class="form-select">
-                        {% for t in templates %}
-                            <option value="{{ t.nombre }}">{{ t.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Descripción (Opcional)</label>
-                    <textarea name="descripcion" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Detalles de la party..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary px-4">🚀 Publicar en Discord</button>
-            </div>
-        </form>
-    </div>
 </div>
 {% endblock %}

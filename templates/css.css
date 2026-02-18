@@ -1,0 +1,103 @@
+/* VARIABLES DE COLOR - ESTILO ALBION PREMIUM */
+:root {
+    --bg-deep: #0f1114;
+    --bg-card: #16191d;
+    --albion-gold: #c8a050;
+    --albion-gold-hover: #e6b85c;
+    --text-main: #e0e0e0;
+    --text-muted: #888;
+    --danger: #ff4d4d;
+    --discord-blue: #5865F2;
+}
+
+/* GENERAL */
+body { 
+    background-color: var(--bg-deep); 
+    color: var(--text-main); 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    margin: 0;
+}
+
+a { text-decoration: none !important; color: inherit; transition: 0.3s; }
+
+/* NAVBAR */
+.navbar { 
+    background-color: rgba(22, 25, 29, 0.95); 
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(200, 160, 80, 0.3); 
+    padding: 1rem 0;
+}
+.navbar-brand { 
+    font-weight: 800; 
+    letter-spacing: 1px; 
+    color: var(--albion-gold) !important; 
+}
+
+/* TARJETAS (CARDS) */
+.card { 
+    background-color: var(--bg-card); 
+    border: 1px solid rgba(255,255,255,0.05); 
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+.card:hover { 
+    border-color: var(--albion-gold); 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5); 
+    transform: translateY(-2px);
+}
+
+/* BOTONES */
+.btn-albion {
+    background: linear-gradient(135deg, var(--albion-gold), #8a6d2d);
+    border: none; 
+    color: white !important; 
+    font-weight: 700; 
+    border-radius: 8px;
+    padding: 10px 20px; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-albion:hover { 
+    background: var(--albion-gold-hover); 
+    transform: scale(1.03); 
+}
+
+.btn-discord {
+    background-color: var(--discord-blue);
+    color: white !important;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* COMPONENTES ESPECÍFICOS */
+.role-badge {
+    background: rgba(200, 160, 80, 0.1);
+    border: 1px solid var(--albion-gold);
+    color: var(--albion-gold);
+    font-size: 0.75rem; 
+    font-weight: bold; 
+    padding: 2px 8px; 
+    border-radius: 4px;
+}
+
+.guild-icon {
+    width: 80px; 
+    height: 80px; 
+    border: 2px solid var(--albion-gold); 
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* LOGIN SCREEN */
+.login-container {
+    background: radial-gradient(circle, #1a1f26 0%, #0f1114 100%);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

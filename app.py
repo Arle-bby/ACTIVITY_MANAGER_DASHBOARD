@@ -30,7 +30,6 @@ def is_user_admin(guild_id):
     
     for g in r.json():
         if g['id'] == str(guild_id):
-            # El bit 0x8 corresponde a Administrador
             return (int(g['permissions']) & 0x8) == 0x8
     return False
 
@@ -64,8 +63,13 @@ def index():
         return render_template('login.html')
     
     headers = {'Authorization': f"Bearer {session['token']}"}
-    user_guilds = requests.get(f"{API_ENDPOINT}/users/@me/guilds", headers=headers).json()
+    user_guilds_resp = requests.get(f"{API_ENDPOINT}/users/@me/guilds", headers=headers)
     
+    if user_guilds_resp.status_code != 200:
+        session.clear()
+        return redirect(url_for('index'))
+
+    user_guilds = user_guilds_resp.json()
     bot_headers = {'Authorization': f"Bot {BOT_TOKEN}"}
     bot_guilds_resp = requests.get(f"{API_ENDPOINT}/users/@me/guilds", headers=bot_headers).json()
     
@@ -73,7 +77,6 @@ def index():
         return f"Error de Discord API: {bot_guilds_resp['message']}", 500
 
     bot_guild_ids = [g['id'] for g in bot_guilds_resp]
-    # Filtrar: Servidores donde soy Admin Y el bot está presente
     final_guilds = [g for g in user_guilds if (int(g['permissions']) & 0x8) == 0x8 and g['id'] in bot_guild_ids]
             
     return render_template('select_server.html', guilds=final_guilds)
@@ -98,7 +101,6 @@ def create_template_action(guild_id):
     nombre = request.form.get('nombre')
     roles_input = request.form.get('roles')
     try:
-        # Formato esperado: "Tank:1, Healer:1, Dps:3"
         roles_dict = {p.split(':')[0].strip(): int(p.split(':')[1].strip()) for p in roles_input.split(',') if ':' in p}
         db["custom_templates"].update_one(
             {"guild_id": int(guild_id), "nombre": nombre},
@@ -110,19 +112,12 @@ def create_template_action(guild_id):
     except Exception as e:
         return f"Error en formato de roles: {e}", 400
 
-@app.route('/delete_template/<guild_id>/<template_name>')
-def delete_template(guild_id, template_name):
-    if 'token' not in session or not is_user_admin(guild_id): return "No autorizado", 403
-    db["custom_templates"].delete_one({"guild_id": int(guild_id), "nombre": template_name})
-    return redirect(url_for('view_templates', guild_id=guild_id))
-
 # --- GESTIÓN DE ACTIVIDADES (PARTIES) ---
 
 @app.route('/ver_actividades/<guild_id>')
 def view_activities(guild_id):
     if 'token' not in session: return redirect(url_for('index'))
     
-    # Combinar Plantillas Fijas + Personalizadas de la DB
     db_templates = list(db["custom_templates"].find({"guild_id": int(guild_id)}))
     fixed_templates = [
         {"nombre": "Ganking", "roles": {"Dps": 5, "Tank": 1, "Healer": 1}},
@@ -148,22 +143,32 @@ def launch_party_action(guild_id):
     nombre_plantilla = request.form.get('plantilla')
     descripcion = request.form.get('descripcion') or "Sin descripción"
     
-    # 1. Obtener roles de la plantilla
+    # 1. Obtener roles
     db_temp = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": nombre_plantilla})
     if db_temp:
         temp_roles = db_temp['roles']
     else:
-        fijas = {"Ganking": {"Dps": 5, "Tank": 1, "Healer": 1}, "HCE": {"Tank": 1, "Healer": 1, "Dps": 3}, "ZVZ": {"Tank": 5, "Healer": 5, "Dps": 15}}
+        fijas = {
+            "Ganking": {"Dps": 5, "Tank": 1, "Healer": 1}, 
+            "HCE": {"Tank": 1, "Healer": 1, "Dps": 3}, 
+            "ZVZ": {"Tank": 5, "Healer": 5, "Dps": 15}
+        }
         temp_roles = fijas.get(nombre_plantilla)
 
     if not temp_roles: return "Plantilla no encontrada", 400
 
-    # 2. Verificar configuración del canal
     config = db["server_config"].find_one({"guild_id": int(guild_id)})
     if not config or not config.get("channel_id"):
-        return "Canal no configurado. Usa /setup en Discord primero.", 400
+        return "Canal no configurado.", 400
 
-    # 3. Enviar mensaje inicial a Discord para obtener el ID real
+    # 2. Mapeo de Emojis para botones
+    role_emojis = {
+        "Tank": "🛡️", "Main Tank": "🛡️", "Off Tank": "🛡️",
+        "Healer": "❤️", "Dps": "⚔️", "Melee": "⚔️", 
+        "Ranged": "🏹", "Support": "✨"
+    }
+
+    # 3. Enviar mensaje inicial
     url = f"{API_ENDPOINT}/channels/{config['channel_id']}/messages"
     headers = {"Authorization": f"Bot {BOT_TOKEN}", "Content-Type": "application/json"}
     
@@ -177,17 +182,16 @@ def launch_party_action(guild_id):
     }
     
     resp = requests.post(url, headers=headers, json=payload_inicial)
-    if resp.status_code != 200:
-        return f"Error Discord API: {resp.text}", 500
+    if resp.status_code != 200: return f"Error Discord: {resp.text}", 500
     
     discord_msg = resp.json()
     real_msg_id = int(discord_msg['id']) 
 
-    # 4. Guardar en MongoDB con el ID real del mensaje
+    # 4. Guardar en MongoDB
     new_party = {
         "_id": real_msg_id, 
         "guild_id": int(guild_id),
-        "creador": "Dashboard", # Marcado para que el bot lo identifique
+        "creador": "Dashboard",
         "titulo": titulo, "descripcion": descripcion,
         "channel_id": int(config['channel_id']),
         "limites": temp_roles, 
@@ -197,38 +201,43 @@ def launch_party_action(guild_id):
     }
     db["parties"].insert_one(new_party)
 
-    # 5. Generar filas de botones (Action Rows)
+    # 5. Generar Componentes (Botones) corregidos
     components = []
     all_roles = list(temp_roles.keys())
     
-    # Fila 1 y 2: Botones de Roles
-    for i in range(0, min(len(all_roles), 10), 5):
+    # Filas de Roles
+    for i in range(0, len(all_roles), 5):
         chunk = all_roles[i:i+5]
         components.append({
             "type": 1,
-            "components": [{"type": 2, "style": 2, "label": r, "custom_id": f"role_{r}_{real_msg_id}"} for r in chunk]
+            "components": [
+                {
+                    "type": 2, "style": 2, "label": r, 
+                    "emoji": {"name": role_emojis.get(r, "👤")},
+                    "custom_id": f"role_{r}_{real_msg_id}"
+                } for r in chunk
+            ]
         })
 
-    # Fila 3: Banquillo y Salirse
+    # Fila de Utilidades
     components.append({
         "type": 1,
         "components": [
-            {"type": 2, "style": 2, "label": "🛋️ Banquillo", "custom_id": f"bench_{real_msg_id}"},
-            {"type": 2, "style": 4, "label": "❌ Salirse", "custom_id": f"leave_{real_msg_id}"}
+            {"type": 2, "style": 2, "label": "Banquillo", "emoji": {"name": "🛋️"}, "custom_id": f"bench_{real_msg_id}"},
+            {"type": 2, "style": 4, "label": "Salirse", "emoji": {"name": "❌"}, "custom_id": f"leave_{real_msg_id}"}
         ]
     })
 
-    # Fila 4: GESTIÓN (Para que aparezcan los botones de Gestionar, Avisar y Borrar)
+    # Fila de Gestión Staff
     components.append({
         "type": 1,
         "components": [
-            {"type": 2, "style": 2, "label": "Gestionar", "emoji": {"name": "⚙️"}, "custom_id": "persistent_manage_btn"},
-            {"type": 2, "style": 1, "label": "Avisar", "emoji": {"name": "🔔"}, "custom_id": "persistent_notify_btn"},
-            {"type": 2, "style": 4, "label": "Borrar", "emoji": {"name": "🗑️"}, "custom_id": "persistent_delete_btn"}
+            {"type": 2, "style": 2, "label": "Gestionar", "emoji": {"name": "⚙️"}, "custom_id": f"manage_{real_msg_id}"},
+            {"type": 2, "style": 1, "label": "Avisar", "emoji": {"name": "🔔"}, "custom_id": f"notify_{real_msg_id}"},
+            {"type": 2, "style": 4, "label": "Borrar", "emoji": {"name": "🗑️"}, "custom_id": f"delete_{real_msg_id}"}
         ]
     })
 
-    # Actualizar mensaje con todos los botones
     requests.patch(f"{url}/{real_msg_id}", headers=headers, json={"components": components})
 
     flash("¡Party lanzada con éxito!")
@@ -247,21 +256,19 @@ def save_settings(guild_id):
     if 'token' not in session or not is_user_admin(guild_id): return "No autorizado", 403
     
     try:
-        channel_id = int(request.form.get('channel_id'))
-        role_id = int(request.form.get('admin_role_id'))
+        db["server_config"].update_one(
+            {"guild_id": int(guild_id)},
+            {"$set": {
+                "channel_id": int(request.form.get('channel_id')),
+                "role_id": int(request.form.get('admin_role_id')),
+                "webhook_url": request.form.get('webhook_url')
+            }},
+            upsert=True
+        )
+        flash("Configuración guardada.")
     except:
-        return "Los IDs deben ser numéricos", 400
-
-    db["server_config"].update_one(
-        {"guild_id": int(guild_id)},
-        {"$set": {
-            "channel_id": channel_id,
-            "role_id": role_id,
-            "webhook_url": request.form.get('webhook_url')
-        }},
-        upsert=True
-    )
-    flash("Configuración guardada correctamente.")
+        flash("Error: Los IDs deben ser números.")
+        
     return redirect(url_for('server_settings', guild_id=guild_id))
 
 # --- AUTENTICACIÓN OAUTH2 ---
@@ -275,11 +282,8 @@ def login():
 def callback():
     code = request.args.get('code')
     data = {
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': REDIRECT_URI
+        'client_id': CLIENT_ID, 'client_secret': CLIENT_SECRET,
+        'grant_type': 'authorization_code', 'code': code, 'redirect_uri': REDIRECT_URI
     }
     r = requests.post(f"{API_ENDPOINT}/oauth2/token", data=data)
     token_data = r.json()
