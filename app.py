@@ -310,29 +310,80 @@ def create_template(guild_id):
 # --- RUTA PARA LANZAR ACTIVIDAD (Copia la plantilla) ---
 @app.route('/lanzar_actividad/<guild_id>', methods=['POST'])
 def lanzar_actividad(guild_id):
+    if 'token' not in session: return redirect(url_for('index'))
+    
     titulo = request.form.get('titulo')
-    nombre_plantilla = request.form.get('plantilla_id') # <--- Cambiado para que coincida con el HTML
+    nombre_plantilla = request.form.get('plantilla_id')
     
-    # Buscamos en la colección de plantillas personalizadas
+    # 1. Obtener Roles de la plantilla
     plantilla = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": nombre_plantilla})
-    
-    # Si no existe, usamos una por defecto (Ganking)
-    roles = plantilla['roles'] if plantilla else {"Dps": 5, "Tank": 1, "Healer": 1}
+    fijas = {
+        "Ganking": {"Dps": 5, "Tank": 1, "Healer": 1}, 
+        "HCE": {"Tank": 1, "Healer": 1, "Dps": 3},
+        "ZVZ": {"Tank": 5, "Healer": 5, "Dps": 15}
+    }
+    temp_roles = plantilla['roles'] if plantilla else fijas.get(nombre_plantilla, {"Cupos": 10})
 
+    # 2. Obtener Configuración del Canal
+    config = db["server_config"].find_one({"guild_id": int(guild_id)})
+    if not config or not config.get("channel_id"):
+        flash("⚠️ Error: Configura el ID del canal en Ajustes primero.")
+        return redirect(url_for('view_activities', guild_id=guild_id))
+
+    # --- AQUÍ ESTABA EL ERROR: Definimos la URL antes de usarla ---
+    url = f"{API_ENDPOINT}/channels/{config['channel_id']}/messages"
+    headers = {"Authorization": f"Bot {BOT_TOKEN}", "Content-Type": "application/json"}
+    
+    # 3. Preparar el mensaje para Discord
+    payload = {
+        "embeds": [{
+            "title": f"⚔️ {titulo}",
+            "description": f"📌 **Líder:** {session.get('user_name', 'Admin')}\nPlantilla: {nombre_plantilla}",
+            "color": 0xFFD700,
+            "fields": [{"name": f"{r} (0/{n})", "value": "Vacío", "inline": True} for r, n in temp_roles.items()]
+        }]
+    }
+    
+    # 4. Enviar a Discord
+    resp = requests.post(url, headers=headers, json=payload)
+    
+    if resp.status_code != 200:
+        print(f"Error Discord: {resp.text}")
+        flash("❌ No se pudo enviar el mensaje a Discord. Revisa los permisos del Bot.")
+        return redirect(url_for('view_activities', guild_id=guild_id))
+    
+    discord_msg = resp.json()
+    msg_id = int(discord_msg['id']) 
+
+    # 5. Guardar en MongoDB
     nueva_party = {
+        "_id": msg_id, 
         "guild_id": int(guild_id),
         "titulo": titulo,
         "creador": session.get('user_name', 'Admin'),
-        "limites": roles,
-        "participants": {rol: [] for rol in roles.keys()}, # Inicializa los roles vacíos
+        "limites": temp_roles,
+        "participants": {rol: [] for rol in temp_roles.keys()},
         "createdAt": datetime.now(timezone.utc)
     }
-    db["parties"].insert_one(nueva_party) # <--- Guardamos en "parties"
-    resp = requests.post(url, headers=headers, json=payload)
-    if resp.status_code != 200:
-        print(f"DEBUG DISCORD ERROR: {resp.text}") # <--- ESTO te dirá la verdad
-        flash(f"Error Discord: {resp.json().get('message', 'Desconocido')}")
-        return redirect(url_for('view_activities', guild_id=guild_id))
+    db["parties"].insert_one(nueva_party)
+
+    # 6. Añadir Botones de Roles
+    role_emojis = {"Tank": "🛡️", "Healer": "❤️", "Dps": "⚔️", "Support": "✨"}
+    buttons = []
+    for r in temp_roles.keys():
+        buttons.append({
+            "type": 2, "style": 2, "label": r, 
+            "custom_id": f"role_{r}_{msg_id}",
+            "emoji": {"name": role_emojis.get(r, "👤")}
+        })
+    
+    # Discord solo permite 5 botones por fila (type 1 es una fila)
+    if buttons:
+        requests.patch(f"{url}/{msg_id}", headers=headers, json={
+            "components": [{"type": 1, "components": buttons[:5]}]
+        })
+
+    flash("🚀 ¡Actividad lanzada con éxito!")
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 # --- RUTA PARA EL BOTÓN "UNIRSE" ---
