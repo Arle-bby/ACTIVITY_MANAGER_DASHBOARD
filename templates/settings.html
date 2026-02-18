@@ -1,31 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-info">⚙️ Ajustes del Servidor</h2>
-        <a href="/dashboard/{{ guild_id }}" class="btn btn-outline-light">Volver</a>
-    </div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="dashboard-card">
+            <h2 style="color: var(--albion-gold);">⚙️ CONFIGURACIÓN DEL SERVIDOR</h2>
+            <p class="text-muted">Ajusta los IDs de Discord para que el bot funcione correctamente.</p>
+            
+            <form action="/save_settings/{{ guild_id }}" method="POST" class="text-start">
+                <div class="mb-3">
+                    <label class="text-white">ID CANAL DE EVENTOS</label>
+                    <input type="number" name="channel_id" class="form-control bg-dark text-white border-info" value="{{ config.channel_id if config else '' }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="text-white">ID ROL STAFF (ADMIN)</label>
+                    <input type="number" name="admin_role_id" class="form-control bg-dark text-white border-info" value="{{ config.role_id if config else '' }}" required>
+                </div>
 
-    <div class="card bg-dark border-secondary p-4 shadow">
-        <form action="/save_settings/{{ guild_id }}" method="POST">
-            <div class="mb-4">
-                <label class="form-label text-white fw-bold">🆔 ID del Rol de Staff</label>
-                <input type="text" name="admin_role_id" class="form-control bg-dark text-white border-secondary" 
-                       placeholder="Ej: 1326688929738522684" 
-                       value="{{ config.admin_role_id if config else '' }}" required>
-                <div class="form-text text-muted">Cualquier usuario con este rol podrá usar los botones de 🔄 y 🗑️.</div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label text-white fw-bold">🔗 Webhook de Anuncios</label>
-                <input type="url" name="webhook_url" class="form-control bg-dark text-white border-secondary" 
-                       placeholder="https://discord.com/api/webhooks/..." 
-                       value="{{ config.webhook_url if config else '' }}">
-                <div class="form-text text-muted">Canal donde se publicarán automáticamente las nuevas actividades.</div>
-            </div>
-
-            <button type="submit" class="btn btn-info w-100 fw-bold">Guardar Configuración</button>
-        </form>
+                <button type="submit" class="btn btn-albion">Guardar Cambios</button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

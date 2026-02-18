@@ -1,40 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: white; font-weight: 800;">⚔️ Actividades en Vivo</h2>
-    <button class="btn btn-albion" data-bs-toggle="modal" data-bs-target="#launchModal">+ Lanzar Actividad</button>
-</div>
-
-<div class="row">
-    {% for party in parties %}
-    <div class="col-md-6 mb-4">
-        <div class="card p-4 border-0 shadow-lg">
-            <div class="d-flex justify-content-between border-bottom border-secondary pb-3 mb-3">
-                <h4 class="fw-bold text-warning mb-0">{{ party.titulo }}</h4>
-                <span class="badge bg-dark text-muted border border-secondary">{{ party.createdAt.strftime('%H:%M') }}</span>
-            </div>
-            
-            <div class="row g-3">
-                {% for rol, lista in party.participants.items() %}
-                <div class="col-12">
-                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="role-badge">{{ rol }}</span>
-                            <span class="small text-muted">{{ lista|length }} / {{ party.limites[rol] }}</span>
-                        </div>
-                        <div class="list-unstyled">
-                            {% for user in lista %}
-                            <div class="d-flex justify-content-between py-1 border-bottom border-secondary border-opacity-25 small">
-                                <span><span class="text-warning opacity-50">👤</span> {{ user.name }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
+<div class="dashboard-card"> <h2 style="color: var(--albion-gold); font-weight: 900;">LANZAR NUEVA ACTIVIDAD</h2>
+    <hr style="border-color: var(--neon-blue);">
+    
+    <form action="/launch_party/{{ guild_id }}" method="POST" class="text-start">
+        <div class="mb-3">
+            <label class="form-label text-white">TÍTULO DE LA ACTIVIDAD</label>
+            <input type="text" name="titulo" class="form-control bg-dark text-white border-secondary" placeholder="Ej: Ganking Nocturno" required>
         </div>
-    </div>
-    {% endfor %}
+
+        <div class="mb-3">
+            <label class="form-label text-white">PLANTILLA DE ROLES</label>
+            <select name="plantilla" class="form-select bg-dark text-white border-secondary">
+                {% for temp in templates %}
+                    <option value="{{ temp.nombre }}">{{ temp.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-white">DESCRIPCIÓN</label>
+            <textarea name="descripcion" class="form-control bg-dark text-white border-secondary" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-albion w-100">Lanzar Party 🚀</button>
+    </form>
 </div>
 {% endblock %}

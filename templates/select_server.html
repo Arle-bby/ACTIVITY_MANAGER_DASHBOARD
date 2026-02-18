@@ -7,17 +7,16 @@
 <div class="row g-4">
     {% for guild in guilds %}
     <div class="col-md-4">
-        <div class="glass-card">
-            <div class="icon-circle">
+        <div class="dashboard-card"> <div class="icon-circle">
                 {% if guild.icon %}
                     <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" style="width:100%; border-radius:50%;">
                 {% else %}
-                    {{ guild.name[0] }}
+                    <span class="text-white">{{ guild.name[0] }}</span>
                 {% endif %}
             </div>
             <h3 class="fw-bold text-white mb-3">{{ guild.name }}</h3>
             <p class="text-muted small">Configura eventos, gestiona roles y lanza parties en vivo.</p>
-            <a href="/dashboard/{{ guild.id }}" class="btn btn-manage">Gestionar</a>
+            <a href="/dashboard/{{ guild.id }}" class="btn btn-albion">Gestionar</a>
         </div>
     </div>
     {% endfor %}
