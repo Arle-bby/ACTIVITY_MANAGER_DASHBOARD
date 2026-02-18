@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+:root {
+    --bg-dark: #0a0b0d;
+    --card-bg: rgba(18, 20, 23, 0.95);
+    --neon-blue: #00d4ff;
+    --albion-gold: #c8a050;
+    --discord-blue: #5865F2;
+}
+
+body {
+    background: #050505 url('https://i.imgur.com/8D9s98t.png'); /* Fondo de estrellas */
+    background-size: cover;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- LOGIN CONTAINER --- */
+.login-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background: var(--card-bg);
+    border: 3px solid var(--neon-blue);
+    border-radius: 25px;
+    padding: 60px;
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), inset 0 0 15px rgba(0, 212, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.login-card h1 {
+    font-size: 2.8rem;
+    font-weight: 900;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.login-card h1 span { color: var(--albion-gold); }
+
+.login-card p {
+    color: var(--albion-gold);
+    font-weight: 500;
+    margin-bottom: 40px;
+}
+
+.btn-discord-login {
+    background-color: var(--discord-blue);
+    color: white !important;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.3s ease;
+    border: none;
+}
+
+.btn-discord-login:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
+}
+
+/* --- SELECT SERVER CARDS --- */
+.dashboard-card {
+    background: var(--card-bg);
+    border: 2px solid var(--neon-blue);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    transition: 0.3s;
+    margin-bottom: 20px;
+}
+
+.dashboard-card:hover {
+    border-color: var(--albion-gold);
+    box-shadow: 0 0 20px rgba(200, 160, 80, 0.3);
+}
+
+.btn-manage {
+    background: var(--albion-gold);
+    color: black !important;
+    font-weight: 800;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    width: 100%;
+    margin-top: 15px;
+}
