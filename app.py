@@ -335,17 +335,18 @@ def lanzar_actividad(guild_id):
 def unirse(guild_id, party_id, role):
     user_name = session.get('user_name', 'Usuario Web')
     
-    # Usamos ObjectId(party_id) para que Mongo encuentre el documento
+    # IMPORTANTE: Quitamos ObjectId() y usamos int() porque el ID de Discord es un número
     db["parties"].update_one(
-        {"_id": ObjectId(party_id)},
+        {"_id": int(party_id)}, 
         {"$addToSet": {f"participants.{role}": user_name}}
     )
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/borrar_actividad/<guild_id>/<party_id>', methods=['POST'])
 def borrar_actividad(guild_id, party_id):
-    # Sin el ObjectId(), este botón nunca borrará nada
-    db["parties"].delete_one({"_id": ObjectId(party_id)})
+    # IMPORTANTE: Quitamos ObjectId() y usamos int()
+    db["parties"].delete_one({"_id": int(party_id)})
+    flash("Actividad eliminada.")
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/login')
