@@ -59,6 +59,8 @@ def tiene_permiso_staff(guild_id):
 
 @app.route('/')
 def index():
+    bot_info = requests.get(f"{API_ENDPOINT}/users/@me", headers={'Authorization': f"Bot {BOT_TOKEN}"}).json()
+    bot_avatar_url = f"https://cdn.discordapp.com/avatars/{bot_info['id']}/{bot_info['avatar']}.png"
     if 'token' not in session:
         return render_template('login.html')
     
@@ -78,8 +80,8 @@ def index():
 
     bot_guild_ids = [g['id'] for g in bot_guilds_resp]
     final_guilds = [g for g in user_guilds if (int(g['permissions']) & 0x8) == 0x8 and g['id'] in bot_guild_ids]
-            
-    return render_template('select_server.html', guilds=final_guilds)
+
+    return render_template('select_server.html', guilds=final_guilds, bot_avatar=bot_avatar_url)
 
 @app.route('/dashboard/<guild_id>')
 def server_dashboard(guild_id):

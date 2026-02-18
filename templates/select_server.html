@@ -1,15 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row g-4 justify-content-center">
+<div class="text-center mb-5">
+    <h1 class="fw-bold" style="color: var(--albion-gold); text-transform: uppercase;">Selecciona una Hermandad</h1>
+</div>
+
+<div class="row g-4">
     {% for guild in guilds %}
     <div class="col-md-4">
-        <a href="/dashboard/{{ guild.id }}">
-            <div class="card p-4 text-center">
-                <img src="{{ guild.icon_url }}" class="guild-icon mx-auto mb-3">
-                <h4 class="fw-bold text-white">{{ guild.name }}</h4>
-                <button class="btn-albion w-100">GESTIONAR</button>
+        <div class="glass-card">
+            <div class="icon-circle">
+                {% if guild.icon %}
+                    <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png" style="width:100%; border-radius:50%;">
+                {% else %}
+                    {{ guild.name[0] }}
+                {% endif %}
             </div>
-        </a>
+            <h3 class="fw-bold text-white mb-3">{{ guild.name }}</h3>
+            <p class="text-muted small">Configura eventos, gestiona roles y lanza parties en vivo.</p>
+            <a href="/dashboard/{{ guild.id }}" class="btn btn-manage">Gestionar</a>
+        </div>
     </div>
     {% endfor %}
 </div>
