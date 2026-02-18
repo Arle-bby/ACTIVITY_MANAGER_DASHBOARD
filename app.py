@@ -187,28 +187,29 @@ def launch_party_action(guild_id):
     new_party = {
         "_id": real_msg_id, 
         "guild_id": int(guild_id),
+        "creador": "Dashboard", # Marcado para que el bot lo identifique
         "titulo": titulo, "descripcion": descripcion,
         "channel_id": int(config['channel_id']),
         "limites": temp_roles, 
         "participants": {r: [] for r in temp_roles},
-        "banquillo": [], "abandonos": [], 
+        "banquillo": [], "abandonos_info": [], 
         "createdAt": datetime.now(timezone.utc)
     }
     db["parties"].insert_one(new_party)
 
-    # 5. Generar filas de botones (Action Rows)
+    # 5. Generar filas de botones (Action Rows) CAMBIADOS PARA COINCIDIR CON EL BOT
     components = []
     all_roles = list(temp_roles.keys())
     
-    # Fila 1 y 2: Botones de Roles (Max 5 por fila)
+    # Fila 1 y 2: Botones de Roles (Formato: role_Nombre_ID)
     for i in range(0, min(len(all_roles), 10), 5):
         chunk = all_roles[i:i+5]
         components.append({
             "type": 1,
-            "components": [{"type": 2, "style": 2, "label": r, "custom_id": f"join_{real_msg_id}_{r}"} for r in chunk]
+            "components": [{"type": 2, "style": 2, "label": r, "custom_id": f"role_{r}_{real_msg_id}"} for r in chunk]
         })
 
-    # Fila final: Gestión
+    # Fila final: Gestión (bench_ID y leave_ID)
     components.append({
         "type": 1,
         "components": [
@@ -282,5 +283,4 @@ def logout():
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
-    # Importante: host 0.0.0.0 para que funcione en la nube
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
