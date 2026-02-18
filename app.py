@@ -85,8 +85,14 @@ def index():
 
 @app.route('/dashboard/<guild_id>')
 def server_dashboard(guild_id):
-    if 'token' not in session: return redirect(url_for('index'))
-    return render_template('index.html', guild_id=guild_id)
+    if 'token' not in session: 
+        return redirect(url_for('index'))
+    
+    # Aquí deberías obtener el nombre del servidor de tu lista de guilds
+    # Ejemplo rápido si tienes la info en sesión o db:
+    guild_name = "Nombre de tu Gremio" # Reemplazar por la lógica que obtiene el nombre
+    
+    return render_template('index.html', guild_id=guild_id, guild_name=guild_name)
 
 # --- GESTIÓN DE PLANTILLAS ---
 

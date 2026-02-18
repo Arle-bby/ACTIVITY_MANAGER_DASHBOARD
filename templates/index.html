@@ -1,39 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container text-center mt-5">
-    <h1 class="text-white mb-2 fw-black">PANEL DE CONTROL</h1>
-    <p class="text-muted mb-5">Servidor ID: <span style="color: var(--neon-blue);">{{ guild_id }}</span></p>
+    <h1 class="fw-black mb-2" style="color: var(--albion-gold); font-size: 3rem;">
+        {{ guild_name | uppercase }}
+    </h1>
+    <p class="text-info fw-bold" style="letter-spacing: 2px;">PANEL DE GESTIÓN DE HERMANDAD</p>
 
-    <div class="row g-4 justify-content-center">
+    <div class="row mt-5 g-4 justify-content-center">
         <div class="col-md-4">
             <a href="/ver_actividades/{{ guild_id }}" class="text-decoration-none">
-                <div class="dashboard-card h-100">
-                    <div class="display-4 mb-3">⚔️</div>
-                    <h3 class="text-white fw-bold">Actividades</h3>
-                    <p class="text-muted small">Lanza nuevas parties y gestiona los grupos en vivo.</p>
-                    <div class="btn btn-albion btn-sm mt-2">Entrar</div>
+                <div class="dashboard-card h-100 p-4">
+                    <div class="display-4">⚔️</div>
+                    <h3 class="text-white fw-bold">ACTIVIDADES</h3>
+                    <p class="text-muted">Lanza nuevas parties y gestiona los grupos en vivo.</p>
+                    <div class="btn btn-albion btn-sm mt-3">ENTRAR</div>
                 </div>
             </a>
         </div>
 
         <div class="col-md-4">
             <a href="/plantillas/{{ guild_id }}" class="text-decoration-none">
-                <div class="dashboard-card h-100">
-                    <div class="display-4 mb-3">📜</div>
-                    <h3 class="text-white fw-bold">Plantillas</h3>
-                    <p class="text-muted small">Configura composiciones de equipo (HCE, ZvZ, Ganking).</p>
-                    <div class="btn btn-albion btn-sm mt-2">Configurar</div>
+                <div class="dashboard-card h-100 p-4">
+                    <div class="display-4">📜</div>
+                    <h3 class="text-white fw-bold">PLANTILLAS</h3>
+                    <p class="text-muted">Configura composiciones de equipo (HCE, ZvZ, Ganking).</p>
+                    <div class="btn btn-albion btn-sm mt-3">CONFIGURAR</div>
                 </div>
             </a>
         </div>
 
         <div class="col-md-4">
             <a href="/settings/{{ guild_id }}" class="text-decoration-none">
-                <div class="dashboard-card h-100">
-                    <div class="display-4 mb-3">⚙️</div>
-                    <h3 class="text-white fw-bold">Ajustes</h3>
-                    <p class="text-muted small">Configura el Rol de Staff y el Webhook de anuncios.</p>
-                    <div class="btn btn-albion btn-sm mt-2">Ajustar</div>
+                <div class="dashboard-card h-100 p-4">
+                    <div class="display-4">⚙️</div>
+                    <h3 class="text-white fw-bold">AJUSTES</h3>
+                    <p class="text-muted">Configura el Rol de Staff y el Webhook de anuncios.</p>
+                    <div class="btn btn-albion btn-sm mt-3">AJUSTAR</div>
                 </div>
             </a>
         </div>
