@@ -2,101 +2,125 @@
 
 :root {
     --bg-dark: #0a0b0d;
-    --card-bg: rgba(18, 20, 23, 0.95);
+    --card-bg: rgba(18, 20, 23, 0.98);
     --neon-blue: #00d4ff;
     --albion-gold: #c8a050;
     --discord-blue: #5865F2;
 }
 
 body {
-    background: #050505 url('https://i.imgur.com/8D9s98t.png'); /* Fondo de estrellas */
-    background-size: cover;
-    color: white;
+    background: radial-gradient(circle, #1a1c20 0%, #050505 100%);
+    background-attachment: fixed;
+    color: #ffffff;
     font-family: 'Inter', sans-serif;
     margin: 0;
-    display: flex;
-    flex-direction: column;
     min-height: 100vh;
 }
 
-/* --- LOGIN CONTAINER --- */
-.login-container {
-    flex: 1;
+/* --- CONTENEDOR TÁCTICO DE ACTIVIDAD --- */
+.activity-container {
     display: flex;
-    align-items: center;
+    gap: 25px;
+    background: var(--card-bg);
+    border: 2px solid var(--neon-blue);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 0 25px rgba(0, 212, 255, 0.15);
+}
+
+/* Columna Izquierda: Info de la Party */
+.activity-info {
+    flex: 1;
+    border-right: 1px solid rgba(200, 160, 80, 0.3);
+    padding-right: 20px;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
 }
 
-.login-card {
-    background: var(--card-bg);
-    border: 3px solid var(--neon-blue);
-    border-radius: 25px;
-    padding: 60px;
-    text-align: center;
-    width: 100%;
-    max-width: 450px;
-    box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), inset 0 0 15px rgba(0, 212, 255, 0.1);
-    backdrop-filter: blur(10px);
-}
-
-.login-card h1 {
-    font-size: 2.8rem;
-    font-weight: 900;
-    margin-bottom: 10px;
-    letter-spacing: -1px;
-}
-
-.login-card h1 span { color: var(--albion-gold); }
-
-.login-card p {
+.activity-info h3 {
     color: var(--albion-gold);
-    font-weight: 500;
-    margin-bottom: 40px;
-}
-
-.btn-discord-login {
-    background-color: var(--discord-blue);
-    color: white !important;
-    text-decoration: none;
-    padding: 15px 30px;
-    border-radius: 10px;
-    font-weight: bold;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: 0.3s ease;
-    border: none;
-}
-
-.btn-discord-login:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4);
-}
-
-/* --- SELECT SERVER CARDS --- */
-.dashboard-card {
-    background: var(--card-bg);
-    border: 2px solid var(--neon-blue);
-    border-radius: 15px;
-    padding: 30px;
-    text-align: center;
-    transition: 0.3s;
-    margin-bottom: 20px;
-}
-
-.dashboard-card:hover {
-    border-color: var(--albion-gold);
-    box-shadow: 0 0 20px rgba(200, 160, 80, 0.3);
-}
-
-.btn-manage {
-    background: var(--albion-gold);
-    color: black !important;
-    font-weight: 800;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    font-weight: 900;
     text-transform: uppercase;
-    width: 100%;
-    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/* Columna Derecha: Cuadrícula de Roles */
+.right-panel {
+    flex: 1.8;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas como en la imagen */
+    gap: 12px;
+}
+
+.role-slot {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.role-slot:hover {
+    background: rgba(0, 212, 255, 0.05);
+    border-color: var(--neon-blue);
+}
+
+.role-name {
+    color: var(--albion-gold);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.role-counter {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #fff;
+}
+
+/* --- BOTONES DE GESTIÓN --- */
+.management-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-management {
+    background: rgba(200, 160, 80, 0.1);
+    border: 1px solid var(--albion-gold);
+    color: var(--albion-gold);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-management:hover {
+    background: var(--albion-gold);
+    color: #000;
+}
+
+/* --- ESTILOS GENERALES --- */
+.btn-albion {
+    background: var(--albion-gold);
+    color: #000;
+    font-weight: 900;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    text-transform: uppercase;
 }
