@@ -328,6 +328,11 @@ def lanzar_actividad(guild_id):
         "createdAt": datetime.now(timezone.utc)
     }
     db["parties"].insert_one(nueva_party) # <--- Guardamos en "parties"
+    resp = requests.post(url, headers=headers, json=payload)
+    if resp.status_code != 200:
+        print(f"DEBUG DISCORD ERROR: {resp.text}") # <--- ESTO te dirá la verdad
+        flash(f"Error Discord: {resp.json().get('message', 'Desconocido')}")
+        return redirect(url_for('view_activities', guild_id=guild_id))
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 # --- RUTA PARA EL BOTÓN "UNIRSE" ---
@@ -335,18 +340,28 @@ def lanzar_actividad(guild_id):
 def unirse(guild_id, party_id, role):
     user_name = session.get('user_name', 'Usuario Web')
     
-    # IMPORTANTE: Quitamos ObjectId() y usamos int() porque el ID de Discord es un número
+    # Intentamos convertir a número, si falla (porque tiene letras), usamos ObjectId
+    try:
+        query_id = int(party_id)
+    except ValueError:
+        query_id = ObjectId(party_id)
+
     db["parties"].update_one(
-        {"_id": int(party_id)}, 
+        {"_id": query_id}, 
         {"$addToSet": {f"participants.{role}": user_name}}
     )
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/borrar_actividad/<guild_id>/<party_id>', methods=['POST'])
 def borrar_actividad(guild_id, party_id):
-    # IMPORTANTE: Quitamos ObjectId() y usamos int()
-    db["parties"].delete_one({"_id": int(party_id)})
-    flash("Actividad eliminada.")
+    # Intentamos convertir a número, si falla, usamos ObjectId
+    try:
+        query_id = int(party_id)
+    except ValueError:
+        query_id = ObjectId(party_id)
+
+    db["parties"].delete_one({"_id": query_id})
+    flash("Actividad eliminada correctamente.")
     return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/login')
