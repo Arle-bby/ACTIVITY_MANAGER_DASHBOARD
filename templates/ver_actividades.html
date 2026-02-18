@@ -6,50 +6,54 @@
         <a href="/dashboard/{{ guild_id }}" class="btn btn-outline-info btn-sm">Volver</a>
     </div>
 
-    <div class="create-activity-box">
-        <h4 class="text-white mb-3"><i class="fas fa-plus-circle text-info"></i> Lanzar Nueva Actividad</h4>
+    <div class="create-activity-box mb-5">
+        <h4 class="text-white mb-3">Lanzar Nueva Actividad</h4>
         <form action="/lanzar_actividad/{{ guild_id }}" method="POST">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" name="titulo" class="form-control" placeholder="Título (Ej: Ganking)" required>
+                    <input type="text" name="titulo" class="form-control bg-dark text-white border-secondary" placeholder="Título (Ej: Ganking)" required>
                 </div>
                 <div class="col-md-4">
-                    <select name="plantilla_id" class="form-select" required>
+                    <select name="plantilla_id" class="form-select bg-dark text-white border-secondary" required>
                         <option value="">Selecciona Plantilla...</option>
-                        {% for p in plantillas %}
-                        <option value="{{ p._id }}">{{ p.nombre }}</option>
+                        {% for p in templates %}
+                        <option value="{{ p.nombre }}">{{ p.nombre }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-warning w-100 fw-bold">LANZAR PARTY 🚀</button>
+                    <button type="submit" class="btn btn-albion w-100 fw-bold">LANZAR PARTY 🚀</button>
                 </div>
             </div>
         </form>
     </div>
 
-    <hr style="border-color: rgba(200, 160, 80, 0.3);">
-
     {% for party in parties %}
     <div class="activity-container">
         <div class="activity-info">
-            <h3 class="text-info">{{ party.titulo }}</h3>
-            <p class="small text-muted mb-0">Líder: <span class="text-white">{{ party.creador }}</span></p>
-            <p class="small text-muted">{{ party.descripcion or 'Sin descripción' }}</p>
+            <h3 class="text-info fw-bold">{{ party.titulo }}</h3>
+            <p class="small text-muted mb-2">Líder: <span class="text-white">{{ party.creador }}</span></p>
+            <div class="management-bar">
+                <form action="/borrar_actividad/{{ guild_id }}/{{ party._id }}" method="POST">
+                    <button type="submit" class="btn-management" style="border-color: #ff4444; color: #ff4444;">
+                        Eliminar Activity
+                    </button>
+                </form>
+            </div>
         </div>
         <div class="right-panel">
             <div class="roles-grid">
                 {% for role, limite in party.limites.items() %}
                 <div class="role-slot">
                     <span class="text-warning small fw-bold">{{ role | upper }}</span>
-                    <div class="h4 mb-0 text-white">{{ party.participants[role]|length }}/{{ limite }}</div>
+                    <div class="role-counter text-white">{{ party.participants[role]|length }}/{{ limite }}</div>
+                    <a href="/unirse/{{ guild_id }}/{{ party._id }}/{{ role }}" 
+                    class="btn btn-sm btn-outline-info w-100 mt-1" 
+                    style="font-size: 0.6rem;">
+                    UNIRSE
+                    </a>
                 </div>
                 {% endfor %}
-            </div>
-            <div class="management-bar">
-                <button class="btn-management">🛡️ Tank</button>
-                <button class="btn-management">⚔️ DPS</button>
-                <button class="btn-management" style="border-color: #ff4444; color: #ff4444;">🗑️ Borrar</button>
             </div>
         </div>
     </div>

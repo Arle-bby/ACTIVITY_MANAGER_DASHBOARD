@@ -17,12 +17,29 @@ body {
     margin: 0;
 }
 
-/* --- SELECTOR DE SERVIDORES (Imágenes pequeñas) --- */
+/* --- TITULOS --- */
+.server-name {
+    color: var(--albion-gold);
+    font-weight: 900;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(200, 160, 80, 0.4);
+    font-size: 3rem;
+}
+
+/* --- ICONOS PANEL DE CONTROL (GRANDES) --- */
+.dashboard-icon {
+    font-size: 5rem !important; /* Aumentado de tamaño significativamente */
+    margin-bottom: 20px;
+    display: block;
+    filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.6));
+}
+
+/* --- SELECTOR DE SERVIDORES (Imágenes normales) --- */
 .server-avatar {
-    width: 80px; /* Tamaño normal, no gigante */
-    height: 80px;
+    width: 120px; /* Tamaño medio para que luzca mejor */
+    height: 120px;
     border-radius: 50%;
-    border: 2px solid var(--neon-blue);
+    border: 3px solid var(--neon-blue);
     margin-bottom: 15px;
     transition: 0.3s;
     object-fit: cover;
@@ -43,25 +60,13 @@ body {
     padding: 25px;
     margin-bottom: 30px;
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
-    position: relative;
 }
 
-.activity-info {
-    flex: 1;
-    border-right: 1px solid rgba(200, 160, 80, 0.3);
-    padding-right: 20px;
-}
-
-.activity-info h3 {
-    color: var(--albion-gold);
-    font-weight: 900;
-    margin-bottom: 15px;
-}
-
-.right-panel {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
+.create-activity-box {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid var(--neon-blue);
+    padding: 20px;
+    border-radius: 12px;
 }
 
 .roles-grid {
@@ -78,19 +83,7 @@ body {
     text-align: center;
 }
 
-.role-name {
-    color: var(--albion-gold);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.role-counter {
-    font-size: 1.4rem;
-    font-weight: 900;
-}
-
-/* BOTONERA DE GESTIÓN (Como en la foto) */
+/* BOTONERA GESTION */
 .management-bar {
     display: flex;
     justify-content: center;
@@ -122,7 +115,7 @@ body {
     background: var(--card-bg);
     border: 2px solid var(--neon-blue);
     border-radius: 15px;
-    padding: 20px;
+    padding: 30px;
     text-align: center;
     transition: 0.3s;
 }
@@ -133,6 +126,6 @@ body {
     font-weight: 900;
     text-transform: uppercase;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 20px;
     border-radius: 5px;
 }

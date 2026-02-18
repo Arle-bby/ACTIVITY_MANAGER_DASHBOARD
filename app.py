@@ -1,3 +1,5 @@
+from flask import Flask, render_template, request, redirect, url_for, session
+from bson.objectid import ObjectId
 from flask import Flask, render_template, session, redirect, url_for, request, flash
 from pymongo import MongoClient
 from datetime import datetime, timezone
@@ -280,6 +282,67 @@ def save_settings(guild_id):
     return redirect(url_for('server_settings', guild_id=guild_id))
 
 # --- AUTENTICACIÓN OAUTH2 ---
+
+# --- RUTA PARA GUARDAR/CREAR PLANTILLAS ---
+@app.route('/create_template/<guild_id>', methods=['POST'])
+def create_template(guild_id):
+    nombre = request.form.get('nombre')
+    roles_input = request.form.get('roles') # Formato "Tanque:2, Healer:4"
+    
+    # Convertimos el texto en un diccionario real
+    roles_dict = {}
+    try:
+        for item in roles_input.split(','):
+            partes = item.split(':')
+            roles_dict[partes[0].strip()] = int(partes[1].strip())
+        
+        # Guardamos o actualizamos en la DB
+        db.templates.update_one(
+            {"guild_id": guild_id, "nombre": nombre},
+            {"$set": {"roles": roles_dict}},
+            upsert=True
+        )
+    except Exception as e:
+        print(f"Error al procesar roles: {e}")
+        
+    return redirect(url_for('ver_plantillas', guild_id=guild_id))
+
+# --- RUTA PARA LANZAR ACTIVIDAD (Copia la plantilla) ---
+@app.route('/lanzar_actividad/<guild_id>', methods=['POST'])
+def lanzar_actividad(guild_id):
+    titulo = request.form.get('titulo')
+    nombre_plantilla = request.form.get('plantilla_id')
+    
+    # 1. Buscamos la plantilla elegida
+    plantilla = db.templates.find_one({"guild_id": guild_id, "nombre": nombre_plantilla})
+    
+    if plantilla:
+        # 2. Creamos la estructura de la party con participantes vacíos
+        nueva_party = {
+            "guild_id": guild_id,
+            "titulo": titulo,
+            "creador": session.get('user_name', 'Admin'),
+            "limites": plantilla['roles'],
+            "participants": {rol: [] for rol in plantilla['roles'].keys()},
+            "status": "active"
+        }
+        # 3. Insertamos en la colección de actividades
+        db.activities.insert_one(nueva_party)
+        
+    return redirect(url_for('ver_actividades', guild_id=guild_id))
+
+# --- RUTA PARA EL BOTÓN "UNIRSE" ---
+@app.route('/unirse/<guild_id>/<party_id>/<role>')
+def unirse(guild_id, party_id, role):
+    user_name = session.get('user_name')
+    if not user_name: return redirect('/login')
+
+    # Agregamos al usuario a la lista del rol específico
+    db.activities.update_one(
+        {"_id": ObjectId(party_id)},
+        {"$addToSet": {f"participants.{role}": user_name}}
+    )
+    return redirect(url_for('ver_actividades', guild_id=guild_id))
 
 @app.route('/login')
 def login():
