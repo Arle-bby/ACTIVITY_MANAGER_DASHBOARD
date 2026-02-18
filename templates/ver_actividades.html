@@ -7,14 +7,12 @@
     </div>
 
     {% for party in parties %}
-    <div class="activity-container animate__animated animate__fadeIn">
-        
+    <div class="activity-container">
         <div class="activity-info">
             <h3>{{ party.titulo }}</h3>
-            <p class="mb-2"><span class="text-muted">Líder:</span> <span class="text-white">{{ party.creador }}</span></p>
-            <p class="mb-4" style="font-size: 0.9rem;">{{ party.descripcion }}</p>
-            
-            <div class="mt-auto">
+            <p class="mb-1"><span class="text-muted small">Líder:</span> <span class="text-white">{{ party.creador }}</span></p>
+            <p class="text-muted small">{{ party.descripcion }}</p>
+            <div class="mt-4">
                 <span class="badge bg-dark border border-secondary text-muted">ID: {{ party._id }}</span>
             </div>
         </div>
@@ -24,7 +22,7 @@
                 {% for role, limite in party.limites.items() %}
                 <div class="role-slot">
                     <span class="role-name">{{ role }}</span>
-                    <div class="role-counter">
+                    <div class="role-counter text-white">
                         {{ party.participants[role]|length }} / {{ limite }}
                     </div>
                     <div class="text-muted" style="font-size: 0.7rem;">
@@ -39,41 +37,18 @@
             </div>
 
             <div class="management-bar">
-                {% for role in party.limites.keys() %}
-                    <button class="btn-management">{{ role }}</button>
-                {% endfor %}
-                
-                <button class="btn-management" style="border-color: var(--neon-blue); color: var(--neon-blue);">⚙️ Gestionar</button>
+                <button class="btn-management">🛡️ Tank</button>
+                <button class="btn-management">⚔️ DPS</button>
+                <button class="btn-management" style="border-color: #00d4ff; color: #00d4ff;">⚙️ Gestionar</button>
+                <button class="btn-management" style="border-color: #5865F2; color: #5865F2;">🔔 Avisar</button>
                 <button class="btn-management" style="border-color: #ff4444; color: #ff4444;">🗑️ Borrar</button>
             </div>
         </div>
     </div>
     {% else %}
-    <div class="dashboard-card text-center py-5">
-        <h3 class="text-muted">No hay actividades activas en este momento.</h3>
+    <div class="dashboard-card py-5">
+        <h3 class="text-muted">No hay actividades activas actualmente.</h3>
     </div>
     {% endfor %}
-
-    <div class="dashboard-card mt-5">
-        <h2 style="color: var(--albion-gold); font-weight: 900;">LANZAR NUEVA ACTIVIDAD</h2>
-        <form action="/launch_party/{{ guild_id }}" method="POST" class="row">
-            <div class="col-md-4 mb-3">
-                <label class="text-white small fw-bold">TÍTULO</label>
-                <input type="text" name="titulo" class="form-control bg-dark text-white border-secondary" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="text-white small fw-bold">PLANTILLA</label>
-                <select name="plantilla" class="form-select bg-dark text-white border-secondary">
-                    {% for temp in templates %}
-                        <option value="{{ temp.nombre }}">{{ temp.nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="text-white small fw-bold text-transparent">.</label>
-                <button type="submit" class="btn btn-albion w-100">Lanzar Actividad 🚀</button>
-            </div>
-        </form>
-    </div>
 </div>
 {% endblock %}
