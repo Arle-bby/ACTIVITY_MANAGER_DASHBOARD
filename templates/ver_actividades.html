@@ -2,16 +2,16 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 style="color: var(--albion-gold); font-weight: 900;">⚔️ ACTIVIDADES</h1>
-        <a href="/dashboard/{{ guild_id }}" class="btn btn-outline-info btn-sm">Volver</a>
+        <h1 style="color: #ffcc00; font-weight: 900;">⚔️ ACTIVIDADES EN CURSO</h1>
+        <a href="/dashboard/{{ guild_id }}" class="btn btn-outline-info">Volver al Panel</a>
     </div>
 
-    <div class="create-activity-box mb-5">
-        <h4 class="text-white mb-3">Lanzar Nueva Actividad</h4>
+    <div class="card bg-dark border-secondary p-4 mb-5 shadow">
+        <h4 class="text-white mb-3"><i class="fas fa-plus-circle"></i> Lanzar Nueva Actividad</h4>
         <form action="/lanzar_actividad/{{ guild_id }}" method="POST">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" name="titulo" class="form-control bg-dark text-white border-secondary" placeholder="Título (Ej: Ganking)" required>
+                    <input type="text" name="titulo" class="form-control bg-dark text-white border-secondary" placeholder="Título (Ej: Grupales 8.4)" required>
                 </div>
                 <div class="col-md-4">
                     <select name="plantilla_id" class="form-select bg-dark text-white border-secondary" required>
@@ -22,36 +22,36 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <button type="submit" class="btn btn-albion w-100 fw-bold">LANZAR PARTY 🚀</button>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold">LANZAR PARTY 🚀</button>
                 </div>
             </div>
         </form>
     </div>
 
     {% for party in parties %}
-    <div class="activity-container">
-        <div class="activity-info">
-            <h3 class="text-info fw-bold">{{ party.titulo }}</h3>
-            <p class="small text-muted mb-2">Líder: <span class="text-white">{{ party.creador }}</span></p>
-            <div class="management-bar">
-                <form action="/borrar_actividad/{{ guild_id }}/{{ party._id }}" method="POST">
-                    <button type="submit" class="btn-management" style="border-color: #ff4444; color: #ff4444;">
-                        Eliminar Activity
-                    </button>
-                </form>
-            </div>
+    <div class="row bg-dark border border-info rounded-3 p-3 mb-4 shadow-sm align-items-center">
+        <div class="col-md-3 border-end border-secondary">
+            <h3 class="text-info mb-1">{{ party.titulo }}</h3>
+            <p class="text-muted small mb-3">Líder: {{ party.creador }}</p>
+            <form action="/borrar_actividad/{{ guild_id }}/{{ party._id }}" method="POST">
+                <button type="submit" class="btn btn-outline-danger btn-sm w-100">ELIMINAR ACTIVITY</button>
+            </form>
         </div>
-        <div class="right-panel">
-            <div class="roles-grid">
+
+        <div class="col-md-9">
+            <div class="d-flex flex-wrap gap-3 justify-content-start ps-3">
                 {% for role, limite in party.limites.items() %}
-                <div class="role-slot">
-                    <span class="text-warning small fw-bold">{{ role | upper }}</span>
-                    <div class="role-counter text-white">{{ party.participants[role]|length }}/{{ limite }}</div>
-                    <a href="/unirse/{{ guild_id }}/{{ party._id }}/{{ role }}" 
-                    class="btn btn-sm btn-outline-info w-100 mt-1" 
-                    style="font-size: 0.6rem;">
-                    UNIRSE
+                <div class="text-center p-2 rounded" style="background: #1a1d21; min-width: 100px; border: 1px solid #333;">
+                    <small class="text-warning d-block fw-bold">{{ role | upper }}</small>
+                    <div class="h4 text-white mb-2">{{ party.participants[role]|length }}/{{ limite }}</div>
+                    
+                    {% if party.participants[role]|length < limite %}
+                    <a href="/unirse/{{ guild_id }}/{{ party._id }}/{{ role }}" class="btn btn-info btn-sm w-100 py-0" style="font-size: 0.7rem;">
+                        UNIRSE
                     </a>
+                    {% else %}
+                    <button class="btn btn-secondary btn-sm w-100 py-0" disabled style="font-size: 0.7rem;">LLENO</button>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

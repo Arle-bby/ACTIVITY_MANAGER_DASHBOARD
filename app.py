@@ -311,38 +311,42 @@ def create_template(guild_id):
 @app.route('/lanzar_actividad/<guild_id>', methods=['POST'])
 def lanzar_actividad(guild_id):
     titulo = request.form.get('titulo')
-    nombre_plantilla = request.form.get('plantilla_id')
+    nombre_plantilla = request.form.get('plantilla_id') # <--- Cambiado para que coincida con el HTML
     
-    # 1. Buscamos la plantilla elegida
-    plantilla = db.templates.find_one({"guild_id": guild_id, "nombre": nombre_plantilla})
+    # Buscamos en la colección de plantillas personalizadas
+    plantilla = db["custom_templates"].find_one({"guild_id": int(guild_id), "nombre": nombre_plantilla})
     
-    if plantilla:
-        # 2. Creamos la estructura de la party con participantes vacíos
-        nueva_party = {
-            "guild_id": guild_id,
-            "titulo": titulo,
-            "creador": session.get('user_name', 'Admin'),
-            "limites": plantilla['roles'],
-            "participants": {rol: [] for rol in plantilla['roles'].keys()},
-            "status": "active"
-        }
-        # 3. Insertamos en la colección de actividades
-        db.activities.insert_one(nueva_party)
-        
-    return redirect(url_for('ver_actividades', guild_id=guild_id))
+    # Si no existe, usamos una por defecto (Ganking)
+    roles = plantilla['roles'] if plantilla else {"Dps": 5, "Tank": 1, "Healer": 1}
+
+    nueva_party = {
+        "guild_id": int(guild_id),
+        "titulo": titulo,
+        "creador": session.get('user_name', 'Admin'),
+        "limites": roles,
+        "participants": {rol: [] for rol in roles.keys()}, # Inicializa los roles vacíos
+        "createdAt": datetime.now(timezone.utc)
+    }
+    db["parties"].insert_one(nueva_party) # <--- Guardamos en "parties"
+    return redirect(url_for('view_activities', guild_id=guild_id))
 
 # --- RUTA PARA EL BOTÓN "UNIRSE" ---
 @app.route('/unirse/<guild_id>/<party_id>/<role>')
 def unirse(guild_id, party_id, role):
-    user_name = session.get('user_name')
-    if not user_name: return redirect('/login')
-
-    # Agregamos al usuario a la lista del rol específico
-    db.activities.update_one(
+    user_name = session.get('user_name', 'Usuario Web')
+    
+    # Usamos ObjectId(party_id) para que Mongo encuentre el documento
+    db["parties"].update_one(
         {"_id": ObjectId(party_id)},
         {"$addToSet": {f"participants.{role}": user_name}}
     )
-    return redirect(url_for('ver_actividades', guild_id=guild_id))
+    return redirect(url_for('view_activities', guild_id=guild_id))
+
+@app.route('/borrar_actividad/<guild_id>/<party_id>', methods=['POST'])
+def borrar_actividad(guild_id, party_id):
+    # Sin el ObjectId(), este botón nunca borrará nada
+    db["parties"].delete_one({"_id": ObjectId(party_id)})
+    return redirect(url_for('view_activities', guild_id=guild_id))
 
 @app.route('/login')
 def login():
